@@ -29,9 +29,7 @@ class MockReplayClient implements ReplayService {
   @delayAndMaybeError(SHOULD_ERROR)
   public async searchGames(options: SearchGamesOptions): Promise<SearchGamesResult> {
     const folderPath = options.folderPath ?? "/default/folder";
-    const files = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) =>
-      aMockFileResultWith(folderPath, { fileName: `Game${i}.slp` }),
-    );
+    const files = [1, 2, 3, 4].map((i) => aMockFileResultWith(folderPath, { fileName: `Game${i}.slp` }));
     return {
       files,
       continuation: undefined,
