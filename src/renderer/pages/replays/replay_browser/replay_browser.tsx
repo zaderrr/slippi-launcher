@@ -26,6 +26,7 @@ import { FileList } from "./file_list/file_list";
 import { FileListSkeleton } from "./file_list/file_list_skeleton";
 import { FileSelectionToolbar } from "./file_selection_toolbar/file_selection_toolbar";
 import { FilterToolbar } from "./filter_toolbar/filter_toolbar";
+import { FilterMenu } from "./FilterMenu";
 import { FolderTreeNode } from "./folder_tree_node";
 import { ReplayBrowserMessages as Messages } from "./replay_browser.messages";
 
@@ -227,6 +228,7 @@ export const ReplayBrowser = React.memo(() => {
               `}
             >
               <FilterToolbar ref={searchInputRef} />
+              <FilterMenu />
               {showLoading ? (
                 <FileListSkeleton />
               ) : filteredFiles.length === 0 ? (
