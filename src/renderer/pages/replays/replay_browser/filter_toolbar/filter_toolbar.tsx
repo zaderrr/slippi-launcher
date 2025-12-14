@@ -44,6 +44,7 @@ export const FilterToolbar = React.forwardRef<HTMLInputElement, FilterToolbarPro
   const extraSlpPaths = useSettings((store) => store.settings.extraSlpPaths);
   const currentFolder = useReplays((store) => store.currentFolder);
   const storeSearchText = useReplayFilter((store) => store.searchText);
+  const storeCharacters = useReplayFilter((store) => store.characters);
   const storeStagePlayed = useReplayFilter((store) => store.stagePlayed);
   const setStoreSearchText = useReplayFilter((store) => store.setSearchText);
   const sortBy = useReplayFilter((store) => store.sortBy);
@@ -78,7 +79,7 @@ export const FilterToolbar = React.forwardRef<HTMLInputElement, FilterToolbarPro
       return;
     }
     presenter.loadFolder(currentFolder, true).catch(showError);
-  }, [sortBy, sortDirection, hideShortGames, storeSearchText, storeStagePlayed]);
+  }, [sortBy, sortDirection, hideShortGames, storeSearchText, storeStagePlayed, storeCharacters]);
 
   return (
     <>

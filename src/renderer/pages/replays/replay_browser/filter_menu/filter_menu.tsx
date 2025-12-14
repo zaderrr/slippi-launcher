@@ -21,6 +21,7 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
     Characters: [],
   });
   const setStagePlayed = useReplayFilter((store) => store.setStagePlayed);
+  const setCharacters = useReplayFilter((store) => store.setCharacters);
   const anchorRef = useRef<HTMLDivElement>(null);
   //List of characters to ignore - May want to include it, but as an easy way to filter out "non-standard" characters
   const IgnoreCharacters = [
@@ -62,7 +63,7 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
 
   interface ReplayFilter {
     Stage: { id: number; name: string };
-    Characters: string[];
+    Characters: number[];
   }
   const handleStageSelected = (event: React.MouseEvent<HTMLLIElement, MouseEvent>, index: number) => {
     const NewFilter: ReplayFilter = { Stage: replayFilter.Stage, Characters: replayFilter.Characters };
@@ -87,15 +88,18 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
     setOpen(false);
   };
   const handleCharacterSelected = (CharacterID: number) => {
-    const SelectedChar = charUtils.getCharacterName(CharacterID);
+    const SelectedChar = charUtils.getCharacterInfo(CharacterID);
     const NewFilter: ReplayFilter = { Stage: replayFilter.Stage, Characters: replayFilter.Characters };
-    const index = replayFilter.Characters.indexOf(SelectedChar);
+    const index = replayFilter.Characters.indexOf(SelectedChar.id);
     if (index > -1) {
-      replayFilter.Characters.splice(index, 1);
+      NewFilter.Characters.splice(index, 1);
     } else {
-      NewFilter.Characters.push(SelectedChar);
+      NewFilter.Characters.push(SelectedChar.id);
     }
     setReplayFilter(NewFilter);
+    let StoreArr: number[] = [];
+    StoreArr = StoreArr.concat(NewFilter.Characters);
+    setCharacters(StoreArr);
     setOpen(false);
   };
   return (

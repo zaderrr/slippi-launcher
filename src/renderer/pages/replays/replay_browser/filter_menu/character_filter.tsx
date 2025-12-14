@@ -9,14 +9,14 @@ export const CharacterFilterMenu = ({
 }: {
   handleSelected: (characterId: number) => void;
   CharacterFilters: charUtils.CharacterInfo[];
-  SelectedCharacters: string[];
+  SelectedCharacters: number[];
 }) => {
   return (
     <div>
       {CharacterFilters.map((character, index) => (
         <Button
           key={index}
-          variant={SelectedCharacters.includes(character.name) ? "contained" : "text"}
+          variant={SelectedCharacters.includes(character.id) ? "contained" : "text"}
           style={{ height: "50px", width: "20px", aspectRatio: 1 }}
           onClick={() => handleSelected(character.id)}
         >

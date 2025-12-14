@@ -3,7 +3,6 @@ import { create } from "zustand";
 import { combine } from "zustand/middleware";
 
 import { ReplaySortOption, SortDirection } from "../replay_file_sort";
-
 export const useReplayFilter = create(
   combine(
     {
@@ -12,6 +11,7 @@ export const useReplayFilter = create(
       sortDirection: SortDirection.DESC,
       stagePlayed: 0,
       hideShortGames: true,
+      characters: <number[]>[],
     },
     (set) => ({
       setSearchText: (searchText: string) => set({ searchText }),
@@ -19,11 +19,15 @@ export const useReplayFilter = create(
       setSortDirection: (sortDirection: SortDirection) => set({ sortDirection }),
       setStagePlayed: (stagePlayed: number) => set({ stagePlayed }),
       setHideShortGames: (hideShortGames: boolean) => set({ hideShortGames }),
+      setCharacters: (characters: number[]) => {
+        set({ characters });
+      },
       resetFilter: () => {
         set({
           searchText: "",
           hideShortGames: false,
           stagePlayed: 0,
+          characters: [],
         });
       },
     }),
@@ -37,9 +41,9 @@ export const buildReplayFilters = (
   hideShortGames: boolean,
   searchText: string,
   stagePlayed: number,
+  characters: number[],
 ): ReplayFilter[] => {
   const filters: ReplayFilter[] = [];
-
   if (hideShortGames) {
     filters.push({
       type: "duration",
@@ -58,5 +62,8 @@ export const buildReplayFilters = (
     filters.push({ type: "stage", stage: stagePlayed });
   }
 
+  if (characters && characters.length > 0) {
+    filters.push({ type: "player", characterIds: characters });
+  }
   return filters;
 };
