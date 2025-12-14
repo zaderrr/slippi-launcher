@@ -17,7 +17,7 @@ import { useSettings } from "@/lib/hooks/use_settings";
 import { useToasts } from "@/lib/hooks/use_toasts";
 import { ReplaySortOption, SortDirection } from "@/lib/replay_file_sort";
 
-import { FilterMenu } from "../FilterMenu";
+import { FilterMenu } from "../filter_menu/filter_menu";
 import { FilterToolbarMessages as Messages } from "./filter_toolbar.messages";
 
 const Outer = styled.div`

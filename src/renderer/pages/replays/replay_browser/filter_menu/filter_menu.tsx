@@ -10,17 +10,19 @@ import { characters as charUtils, stages as stageUtils } from "@slippi/slippi-js
 import { forwardRef, useRef, useState } from "react";
 
 import { useReplayFilter } from "@/lib/hooks/use_replay_filter";
-import { getCharacterIcon } from "@/lib/utils";
+
+import { CharacterFilterMenu } from "./character_filter";
+
 export const FilterMenu = forwardRef<HTMLInputElement>(() => {
   const [open, setOpen] = useState(false);
   const [selectedFilterOptions, setSelectedFilterOptions] = useState<string>();
-  const setStagePlayed = useReplayFilter((store) => store.setStagePlayed);
   const [replayFilter, setReplayFilter] = useState<ReplayFilter>({
     Stage: { id: 0, name: "unselected" },
     Characters: [],
   });
+  const setStagePlayed = useReplayFilter((store) => store.setStagePlayed);
   const anchorRef = useRef<HTMLDivElement>(null);
-
+  //List of characters to ignore - May want to include it, but as an easy way to filter out "non-standard" characters
   const IgnoreCharacters = [
     "Master Hand",
     "Popo",
@@ -34,6 +36,7 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
     const AllChars = charUtils.getAllCharacters();
     const names: charUtils.CharacterInfo[] = [];
     AllChars.forEach((character) => {
+      //Filter out ignored characters
       if (!IgnoreCharacters.includes(character.name)) {
         names.push(character);
       }
@@ -45,11 +48,13 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
     Characters: charUtils.CharacterInfo[];
   } = {
     Stage: [
+      //Only get legal stages, can easily be expanded.
+      //FOD,PS,YS,DL,BF,FD respectively
       { id: 2, name: stageUtils.getStageName(2) },
       { id: 3, name: stageUtils.getStageName(3) },
       { id: 8, name: stageUtils.getStageName(8) },
-      { id: 31, name: stageUtils.getStageName(31) },
       { id: 28, name: stageUtils.getStageName(28) },
+      { id: 31, name: stageUtils.getStageName(31) },
       { id: 32, name: stageUtils.getStageName(32) },
     ],
     Characters: getAllCharcters(),
@@ -59,31 +64,26 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
     Stage: { id: number; name: string };
     Characters: string[];
   }
-  const handleMenuItemClick = (event: React.MouseEvent<HTMLLIElement, MouseEvent>, index: number) => {
+  const handleStageSelected = (event: React.MouseEvent<HTMLLIElement, MouseEvent>, index: number) => {
     const NewFilter: ReplayFilter = { Stage: replayFilter.Stage, Characters: replayFilter.Characters };
     if (replayFilter.Stage.id == FilterOptions.Stage[index].id) {
       NewFilter.Stage = { id: 0, name: "unselected" };
     } else {
       NewFilter.Stage = FilterOptions.Stage[index];
     }
-    setReplayFilter(NewFilter);
-    setStagePlayed(NewFilter.Stage.id);
     setOpen(false);
+    setStagePlayed(NewFilter.Stage.id);
+    setReplayFilter(NewFilter);
   };
 
-  const handleStageFilterToggle = () => {
-    setSelectedFilterOptions("Stage");
-    setOpen((prevOpen) => !prevOpen);
-  };
-  const handleCharactersFilterToggle = () => {
-    setSelectedFilterOptions("Characters");
+  const handleFilterMenuToggle = (menu: "Stage" | "Characters") => {
+    setSelectedFilterOptions(menu);
     setOpen((prevOpen) => !prevOpen);
   };
   const handleClose = (event: Event) => {
     if (anchorRef.current && anchorRef.current.contains(event.target as HTMLElement)) {
       return;
     }
-
     setOpen(false);
   };
   const handleCharacterSelected = (CharacterID: number) => {
@@ -109,11 +109,14 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
       }}
     >
       <ButtonGroup ref={anchorRef} aria-label="Button group with a nested menu">
-        <Button variant={replayFilter.Stage.id != 0 ? "contained" : "outlined"} onClick={handleStageFilterToggle}>
+        <Button
+          variant={replayFilter.Stage.id != 0 ? "contained" : "outlined"}
+          onClick={() => handleFilterMenuToggle("Stage")}
+        >
           {replayFilter.Stage.id != 0 ? replayFilter.Stage.name : "Stage"}
         </Button>
         <Button
-          onClick={handleCharactersFilterToggle}
+          onClick={() => handleFilterMenuToggle("Characters")}
           variant={replayFilter.Characters.length > 0 ? "contained" : "outlined"}
         >
           {replayFilter.Characters.length === 0 ? "Characters" : replayFilter.Characters.length + " selected"}
@@ -139,7 +142,7 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
               <ClickAwayListener onClickAway={handleClose}>
                 <MenuList id="split-button-menu" autoFocusItem={true}>
                   {selectedFilterOptions == "Characters" && (
-                    <CharacterSelector
+                    <CharacterFilterMenu
                       CharacterFilters={FilterOptions.Characters}
                       SelectedCharacters={replayFilter.Characters}
                       handleSelected={handleCharacterSelected}
@@ -150,7 +153,7 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
                       <MenuItem
                         key={option.id}
                         selected={replayFilter[selectedFilterOptions].id === option.id}
-                        onClick={(event) => handleMenuItemClick(event, index)}
+                        onClick={(event) => handleStageSelected(event, index)}
                         style={{ width: "100%" }}
                       >
                         {option.name}
@@ -165,28 +168,3 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
     </div>
   );
 });
-
-const CharacterSelector = ({
-  handleSelected,
-  CharacterFilters,
-  SelectedCharacters,
-}: {
-  handleSelected: (characterId: number) => void;
-  CharacterFilters: charUtils.CharacterInfo[];
-  SelectedCharacters: string[];
-}) => {
-  return (
-    <div>
-      {CharacterFilters.map((character, index) => (
-        <Button
-          key={index}
-          variant={SelectedCharacters.includes(character.name) ? "contained" : "text"}
-          style={{ height: "50px", width: "20px", aspectRatio: 1 }}
-          onClick={() => handleSelected(character.id)}
-        >
-          <img src={getCharacterIcon(character.id)} style={{ width: "40px" }}></img>
-        </Button>
-      ))}
-    </div>
-  );
-};
