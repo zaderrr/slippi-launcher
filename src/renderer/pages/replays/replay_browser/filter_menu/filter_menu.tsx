@@ -1,8 +1,8 @@
+import ClearIcon from "@mui/icons-material/Clear";
 import Button from "@mui/material/Button";
 import ButtonGroup from "@mui/material/ButtonGroup";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 import Grow from "@mui/material/Grow";
-import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
 import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
@@ -12,7 +12,7 @@ import { forwardRef, useRef, useState } from "react";
 import { useReplayFilter } from "@/lib/hooks/use_replay_filter";
 
 import { CharacterFilterMenu } from "./character_filter";
-
+import { StageFilter } from "./stage_filter";
 export const FilterMenu = forwardRef<HTMLInputElement>(() => {
   const [open, setOpen] = useState(false);
   const [selectedFilterOptions, setSelectedFilterOptions] = useState<string>();
@@ -65,12 +65,12 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
     Stage: { id: number; name: string };
     Characters: number[];
   }
-  const handleStageSelected = (event: React.MouseEvent<HTMLLIElement, MouseEvent>, index: number) => {
+  const handleStageSelected = (Stage: { id: number; name: string }) => {
     const NewFilter: ReplayFilter = { Stage: replayFilter.Stage, Characters: replayFilter.Characters };
-    if (replayFilter.Stage.id == FilterOptions.Stage[index].id) {
+    if (replayFilter.Stage.id == Stage.id) {
       NewFilter.Stage = { id: 0, name: "unselected" };
     } else {
-      NewFilter.Stage = FilterOptions.Stage[index];
+      NewFilter.Stage = Stage;
     }
     setOpen(false);
     setStagePlayed(NewFilter.Stage.id);
@@ -102,30 +102,50 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
     setCharacters(StoreArr);
     setOpen(false);
   };
+
+  const clearFilters = () => {
+    const defaultFilters = {
+      Stage: { id: 0, name: "unselected" },
+      Characters: [],
+    };
+    setReplayFilter(defaultFilters);
+    setCharacters(defaultFilters.Characters);
+    setStagePlayed(defaultFilters.Stage.id);
+  };
+
   return (
     <div
       style={{
-        flex: "flex",
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
         height: "40px",
         backgroundColor: "#1B0B28",
         background: "linear-gradient(180deg,rgba(27, 11, 40, 1) 0%, rgba(41, 19, 59, 1) 100%)",
         padding: "10px",
       }}
     >
-      <ButtonGroup ref={anchorRef} aria-label="Button group with a nested menu">
-        <Button
-          variant={replayFilter.Stage.id != 0 ? "contained" : "outlined"}
-          onClick={() => handleFilterMenuToggle("Stage")}
-        >
-          {replayFilter.Stage.id != 0 ? replayFilter.Stage.name : "Stage"}
+      <div>
+        <ButtonGroup ref={anchorRef} aria-label="Button group with a nested menu">
+          <Button
+            variant={replayFilter.Stage.id != 0 ? "contained" : "outlined"}
+            onClick={() => handleFilterMenuToggle("Stage")}
+          >
+            {replayFilter.Stage.id != 0 ? replayFilter.Stage.name : "Stage"}
+          </Button>
+          <Button
+            onClick={() => handleFilterMenuToggle("Characters")}
+            variant={replayFilter.Characters.length > 0 ? "contained" : "outlined"}
+          >
+            {replayFilter.Characters.length === 0 ? "Characters" : replayFilter.Characters.length + " selected"}
+          </Button>
+        </ButtonGroup>
+      </div>
+      <div>
+        <Button variant="outlined" color="error" onClick={clearFilters}>
+          <ClearIcon color="error" fontSize="small" />
         </Button>
-        <Button
-          onClick={() => handleFilterMenuToggle("Characters")}
-          variant={replayFilter.Characters.length > 0 ? "contained" : "outlined"}
-        >
-          {replayFilter.Characters.length === 0 ? "Characters" : replayFilter.Characters.length + " selected"}
-        </Button>
-      </ButtonGroup>
+      </div>
       <Popper
         sx={{ zIndex: 1 }}
         open={open}
@@ -152,17 +172,13 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
                       handleSelected={handleCharacterSelected}
                     />
                   )}
-                  {selectedFilterOptions == "Stage" &&
-                    FilterOptions[selectedFilterOptions].map((option, index) => (
-                      <MenuItem
-                        key={option.id}
-                        selected={replayFilter[selectedFilterOptions].id === option.id}
-                        onClick={(event) => handleStageSelected(event, index)}
-                        style={{ width: "100%" }}
-                      >
-                        {option.name}
-                      </MenuItem>
-                    ))}
+                  {selectedFilterOptions == "Stage" && (
+                    <StageFilter
+                      Stages={FilterOptions.Stage}
+                      SelectedStage={replayFilter.Stage}
+                      handleStageSelected={handleStageSelected}
+                    />
+                  )}
                 </MenuList>
               </ClickAwayListener>
             </Paper>
