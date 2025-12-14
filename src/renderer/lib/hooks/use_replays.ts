@@ -195,10 +195,10 @@ export class ReplayPresenter {
       });
       try {
         // Get current filter state
-        const { sortBy, sortDirection, hideShortGames, searchText } = useReplayFilter.getState();
+        const { sortBy, sortDirection, hideShortGames, searchText, stagePlayed } = useReplayFilter.getState();
 
         // Build filters from current state
-        const filters = buildReplayFilters(hideShortGames, searchText);
+        const filters = buildReplayFilters(hideShortGames, searchText, stagePlayed);
 
         // Use searchGames with pagination - load first batch
         const result = await this.replayService.searchGames({
@@ -301,10 +301,10 @@ export class ReplayPresenter {
 
     try {
       // Get current filter state
-      const { sortBy, sortDirection, hideShortGames, searchText } = useReplayFilter.getState();
+      const { sortBy, sortDirection, hideShortGames, searchText, stagePlayed } = useReplayFilter.getState();
 
       // Build filters from current state
-      const filters = buildReplayFilters(hideShortGames, searchText);
+      const filters = buildReplayFilters(hideShortGames, searchText, stagePlayed);
 
       // Load next batch of replays
       const result = await this.replayService.searchGames({

@@ -31,6 +31,8 @@ function applyFilter(
       return applyGameModeFilter(query, filter);
     case "textSearch":
       return applyTextSearchFilter(query, filter);
+    case "stage":
+      return applyStageFilter(query, filter);
     default: {
       // TypeScript exhaustiveness check
       const _exhaustive: never = filter;
@@ -157,7 +159,6 @@ function applyTextSearchFilter(
   }
 
   const searchPattern = `%${filter.query}%`;
-
   // If only searching file names
   if (filter.searchFileNameOnly) {
     return query.where("file.name", "like", searchPattern);
@@ -186,4 +187,13 @@ function applyTextSearchFilter(
       ),
     ]),
   );
+}
+function applyStageFilter(
+  query: SelectQueryBuilder<Database, "file" | "game", {}>,
+  filter: Extract<ReplayFilter, { type: "stage" }>,
+): SelectQueryBuilder<Database, "file" | "game", {}> {
+  if (filter.stage === 0) {
+    return query;
+  }
+  return query.where("game.stage", "=", filter.stage);
 }

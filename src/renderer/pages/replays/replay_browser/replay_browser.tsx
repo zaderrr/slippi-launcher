@@ -26,7 +26,6 @@ import { FileList } from "./file_list/file_list";
 import { FileListSkeleton } from "./file_list/file_list_skeleton";
 import { FileSelectionToolbar } from "./file_selection_toolbar/file_selection_toolbar";
 import { FilterToolbar } from "./filter_toolbar/filter_toolbar";
-import { FilterMenu } from "./FilterMenu";
 import { FolderTreeNode } from "./folder_tree_node";
 import { ReplayBrowserMessages as Messages } from "./replay_browser.messages";
 
@@ -116,8 +115,8 @@ export const ReplayBrowser = React.memo(() => {
     try {
       if (selectAllMode) {
         // Get all file paths from the current folder with the same filters
-        const { sortBy, sortDirection, hideShortGames, searchText } = useReplayFilter.getState();
-        const filters = buildReplayFilters(hideShortGames, searchText);
+        const { sortBy, sortDirection, hideShortGames, searchText, stagePlayed } = useReplayFilter.getState();
+        const filters = buildReplayFilters(hideShortGames, searchText, stagePlayed);
         const allFilePaths = await replayService.getAllFilePaths({
           folderPath: currentFolder,
           orderBy: {
@@ -153,8 +152,8 @@ export const ReplayBrowser = React.memo(() => {
 
       if (selectAllMode) {
         // Use bulk delete with filters
-        const { hideShortGames, searchText } = useReplayFilter.getState();
-        const filters = buildReplayFilters(hideShortGames, searchText);
+        const { hideShortGames, searchText, stagePlayed } = useReplayFilter.getState();
+        const filters = buildReplayFilters(hideShortGames, searchText, stagePlayed);
         const result = await replayService.bulkDeleteReplays({
           folderPath: currentFolder,
           filters,
@@ -228,7 +227,6 @@ export const ReplayBrowser = React.memo(() => {
               `}
             >
               <FilterToolbar ref={searchInputRef} />
-              <FilterMenu />
               {showLoading ? (
                 <FileListSkeleton />
               ) : filteredFiles.length === 0 ? (

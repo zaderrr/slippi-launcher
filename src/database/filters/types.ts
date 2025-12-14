@@ -75,7 +75,17 @@ export type TextSearchFilter = {
   searchFileNameOnly?: boolean;
 };
 
-export type ReplayFilter = DurationFilter | PlayerFilter | GameModeFilter | TextSearchFilter;
+/**
+ * Filter for the stage a game was played on
+ *
+ */
+
+export type StageFilter = {
+  type: "stage";
+  stage: number; // Stage ID
+};
+
+export type ReplayFilter = DurationFilter | PlayerFilter | GameModeFilter | TextSearchFilter | StageFilter;
 
 // Game mode constants
 const GameModeValue = {

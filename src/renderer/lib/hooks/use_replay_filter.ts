@@ -10,17 +10,20 @@ export const useReplayFilter = create(
       searchText: "",
       sortBy: ReplaySortOption.DATE,
       sortDirection: SortDirection.DESC,
+      stagePlayed: 0,
       hideShortGames: true,
     },
     (set) => ({
       setSearchText: (searchText: string) => set({ searchText }),
       setSortBy: (sortBy: ReplaySortOption) => set({ sortBy }),
       setSortDirection: (sortDirection: SortDirection) => set({ sortDirection }),
+      setStagePlayed: (stagePlayed: number) => set({ stagePlayed }),
       setHideShortGames: (hideShortGames: boolean) => set({ hideShortGames }),
       resetFilter: () => {
         set({
           searchText: "",
           hideShortGames: false,
+          stagePlayed: 0,
         });
       },
     }),
@@ -30,7 +33,11 @@ export const useReplayFilter = create(
 /**
  * Converts the current filter state to ReplayFilter array
  */
-export const buildReplayFilters = (hideShortGames: boolean, searchText: string): ReplayFilter[] => {
+export const buildReplayFilters = (
+  hideShortGames: boolean,
+  searchText: string,
+  stagePlayed: number,
+): ReplayFilter[] => {
   const filters: ReplayFilter[] = [];
 
   if (hideShortGames) {
@@ -45,6 +52,10 @@ export const buildReplayFilters = (hideShortGames: boolean, searchText: string):
       type: "textSearch",
       query: searchText.trim(),
     });
+  }
+
+  if (stagePlayed != 0) {
+    filters.push({ type: "stage", stage: stagePlayed });
   }
 
   return filters;

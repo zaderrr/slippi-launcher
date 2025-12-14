@@ -1,6 +1,7 @@
 import { css } from "@emotion/react";
 import styled from "@emotion/styled";
 import CloseIcon from "@mui/icons-material/Close";
+import FilterList from "@mui/icons-material/FilterList";
 import SearchIcon from "@mui/icons-material/Search";
 import SyncIcon from "@mui/icons-material/Sync";
 import IconButton from "@mui/material/IconButton";
@@ -16,6 +17,7 @@ import { useSettings } from "@/lib/hooks/use_settings";
 import { useToasts } from "@/lib/hooks/use_toasts";
 import { ReplaySortOption, SortDirection } from "@/lib/replay_file_sort";
 
+import { FilterMenu } from "../FilterMenu";
 import { FilterToolbarMessages as Messages } from "./filter_toolbar.messages";
 
 const Outer = styled.div`
@@ -42,6 +44,7 @@ export const FilterToolbar = React.forwardRef<HTMLInputElement, FilterToolbarPro
   const extraSlpPaths = useSettings((store) => store.settings.extraSlpPaths);
   const currentFolder = useReplays((store) => store.currentFolder);
   const storeSearchText = useReplayFilter((store) => store.searchText);
+  const storeStagePlayed = useReplayFilter((store) => store.stagePlayed);
   const setStoreSearchText = useReplayFilter((store) => store.setSearchText);
   const sortBy = useReplayFilter((store) => store.sortBy);
   const hideShortGames = useReplayFilter((store) => store.hideShortGames);
@@ -50,6 +53,7 @@ export const FilterToolbar = React.forwardRef<HTMLInputElement, FilterToolbarPro
   const sortDirection = useReplayFilter((store) => store.sortDirection);
   const setSortDirection = useReplayFilter((store) => store.setSortDirection);
   const [searchText, setSearchText] = React.useState(storeSearchText ?? "");
+  const [filterEnabled, setFilterEnabled] = React.useState(false);
   const { showError } = useToasts();
 
   const refresh = React.useCallback(() => {
@@ -74,90 +78,97 @@ export const FilterToolbar = React.forwardRef<HTMLInputElement, FilterToolbarPro
       return;
     }
     presenter.loadFolder(currentFolder, true).catch(showError);
-  }, [sortBy, sortDirection, hideShortGames, storeSearchText]);
+  }, [sortBy, sortDirection, hideShortGames, storeSearchText, storeStagePlayed]);
 
   return (
-    <Outer>
-      <ButtonContainer>
-        <div style={{ display: "inline-block" }}>
-          <Button onClick={refresh} disabled={disabled} startIcon={<SyncIcon />}>
-            {Messages.refresh()}
+    <>
+      <Outer>
+        <ButtonContainer>
+          <div style={{ display: "inline-block" }}>
+            <Button onClick={refresh} disabled={disabled} startIcon={<SyncIcon />}>
+              {Messages.refresh()}
+            </Button>
+          </div>
+          <Dropdown
+            value={{
+              key: sortBy,
+              dir: sortDirection,
+            }}
+            options={[
+              {
+                value: {
+                  key: ReplaySortOption.DATE,
+                  dir: SortDirection.DESC,
+                },
+                label: Messages.mostRecent(),
+              },
+              {
+                value: {
+                  key: ReplaySortOption.DATE,
+                  dir: SortDirection.ASC,
+                },
+                label: Messages.leastRecent(),
+              },
+              {
+                value: {
+                  key: ReplaySortOption.GAME_DURATION,
+                  dir: SortDirection.DESC,
+                },
+                label: Messages.longestGame(),
+              },
+              {
+                value: {
+                  key: ReplaySortOption.GAME_DURATION,
+                  dir: SortDirection.ASC,
+                },
+                label: Messages.shortestGame(),
+              },
+            ]}
+            onChange={(val) => {
+              setSortBy(val.key);
+              setSortDirection(val.dir);
+            }}
+          />
+          <Checkbox
+            label={Messages.hideShortGames()}
+            checked={hideShortGames}
+            onChange={() => setHideShortGames(!hideShortGames)}
+            css={css`
+              .MuiFormControlLabel-label {
+                font-size: 12px;
+              }
+            `}
+          />
+        </ButtonContainer>
+        <div>
+          <Button variant="outlined" style={{ marginRight: "10px" }} onClick={() => setFilterEnabled(!filterEnabled)}>
+            <FilterList style={{ width: "20px" }} />
           </Button>
-        </div>
-        <Dropdown
-          value={{
-            key: sortBy,
-            dir: sortDirection,
-          }}
-          options={[
-            {
-              value: {
-                key: ReplaySortOption.DATE,
-                dir: SortDirection.DESC,
-              },
-              label: Messages.mostRecent(),
-            },
-            {
-              value: {
-                key: ReplaySortOption.DATE,
-                dir: SortDirection.ASC,
-              },
-              label: Messages.leastRecent(),
-            },
-            {
-              value: {
-                key: ReplaySortOption.GAME_DURATION,
-                dir: SortDirection.DESC,
-              },
-              label: Messages.longestGame(),
-            },
-            {
-              value: {
-                key: ReplaySortOption.GAME_DURATION,
-                dir: SortDirection.ASC,
-              },
-              label: Messages.shortestGame(),
-            },
-          ]}
-          onChange={(val) => {
-            setSortBy(val.key);
-            setSortDirection(val.dir);
-          }}
-        />
-        <Checkbox
-          label={Messages.hideShortGames()}
-          checked={hideShortGames}
-          onChange={() => setHideShortGames(!hideShortGames)}
-          css={css`
-            .MuiFormControlLabel-label {
+          <InputBase
+            ref={ref}
+            css={css`
+              background-color: black;
+              border-radius: 10px;
+              padding: 5px 10px;
               font-size: 12px;
+            `}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={() => setNameFilter("")} disabled={searchText.length === 0}>
+                  {searchText.length > 0 ? <CloseIcon fontSize="inherit" /> : <SearchIcon fontSize="inherit" />}
+                </IconButton>
+              </InputAdornment>
             }
-          `}
-        />
-      </ButtonContainer>
-      <div>
-        <InputBase
-          ref={ref}
-          css={css`
-            background-color: black;
-            border-radius: 10px;
-            padding: 5px 10px;
-            font-size: 12px;
-          `}
-          endAdornment={
-            <InputAdornment position="end">
-              <IconButton size="small" onClick={() => setNameFilter("")} disabled={searchText.length === 0}>
-                {searchText.length > 0 ? <CloseIcon fontSize="inherit" /> : <SearchIcon fontSize="inherit" />}
-              </IconButton>
-            </InputAdornment>
-          }
-          placeholder={Messages.search()}
-          value={searchText}
-          onChange={(e) => {
-            setNameFilter(e.target.value);
-          }}
-        />
-      </div>
-    </Outer>
+            placeholder={Messages.search()}
+            value={searchText}
+            onChange={(e) => {
+              setNameFilter(e.target.value);
+            }}
+          />
+        </div>
+      </Outer>
+
+      {filterEnabled && <FilterMenu />}
+    </>
   );
 });
