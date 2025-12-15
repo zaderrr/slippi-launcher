@@ -169,7 +169,7 @@ export const FilterToolbar = React.forwardRef<HTMLInputElement, FilterToolbarPro
         </div>
       </Outer>
 
-      <FilterMenu showFilters={filterEnabled}> </FilterMenu>
+      <FilterMenu showFilters={filterEnabled} />
     </>
   );
 });
