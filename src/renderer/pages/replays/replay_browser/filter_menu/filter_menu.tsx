@@ -7,19 +7,20 @@ import MenuList from "@mui/material/MenuList";
 import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import { characters as charUtils, stages as stageUtils } from "@slippi/slippi-js";
-import { forwardRef, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { useReplayFilter } from "@/lib/hooks/use_replay_filter";
 
 import { CharacterFilterMenu } from "./character_filter";
 import { StageFilter } from "./stage_filter";
-export const FilterMenu = forwardRef<HTMLInputElement>(() => {
+export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
   const [open, setOpen] = useState(false);
   const [selectedFilterOptions, setSelectedFilterOptions] = useState<string>();
   const [replayFilter, setReplayFilter] = useState<ReplayFilter>({
     Stage: { id: 0, name: "unselected" },
     Characters: [],
   });
+  const clearStoreFilters = useReplayFilter((store) => store.resetFilter);
   const setStagePlayed = useReplayFilter((store) => store.setStagePlayed);
   const setCharacters = useReplayFilter((store) => store.setCharacters);
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -102,89 +103,91 @@ export const FilterMenu = forwardRef<HTMLInputElement>(() => {
     setCharacters(StoreArr);
     setOpen(false);
   };
-
+  console.log("Filters");
   const clearFilters = () => {
     const defaultFilters = {
       Stage: { id: 0, name: "unselected" },
       Characters: [],
     };
     setReplayFilter(defaultFilters);
-    setCharacters(defaultFilters.Characters);
-    setStagePlayed(defaultFilters.Stage.id);
+    clearStoreFilters();
   };
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        height: "40px",
-        backgroundColor: "#1B0B28",
-        background: "linear-gradient(180deg,rgba(27, 11, 40, 1) 0%, rgba(41, 19, 59, 1) 100%)",
-        padding: "10px",
-      }}
-    >
-      <div>
-        <ButtonGroup ref={anchorRef} aria-label="Button group with a nested menu">
-          <Button
-            variant={replayFilter.Stage.id != 0 ? "contained" : "outlined"}
-            onClick={() => handleFilterMenuToggle("Stage")}
-          >
-            {replayFilter.Stage.id != 0 ? replayFilter.Stage.name : "Stage"}
-          </Button>
-          <Button
-            onClick={() => handleFilterMenuToggle("Characters")}
-            variant={replayFilter.Characters.length > 0 ? "contained" : "outlined"}
-          >
-            {replayFilter.Characters.length === 0 ? "Characters" : replayFilter.Characters.length + " selected"}
-          </Button>
-        </ButtonGroup>
-      </div>
-      <div>
-        <Button variant="outlined" color="error" onClick={clearFilters}>
-          <ClearIcon color="error" fontSize="small" />
-        </Button>
-      </div>
-      <Popper
-        sx={{ zIndex: 1 }}
-        open={open}
-        anchorEl={anchorRef.current}
-        role={undefined}
-        transition={true}
-        disablePortal={true}
-        style={{ width: "40%" }}
+  if (showFilters == false) {
+    return null;
+  } else {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          height: "40px",
+          backgroundColor: "#1B0B28",
+          background: "linear-gradient(180deg,rgba(27, 11, 40, 1) 0%, rgba(41, 19, 59, 1) 100%)",
+          padding: "10px",
+        }}
       >
-        {({ TransitionProps, placement }) => (
-          <Grow
-            {...TransitionProps}
-            style={{
-              transformOrigin: placement === "bottom" ? "center top" : "center bottom",
-            }}
-          >
-            <Paper>
-              <ClickAwayListener onClickAway={handleClose}>
-                <MenuList id="split-button-menu" autoFocusItem={true}>
-                  {selectedFilterOptions == "Characters" && (
-                    <CharacterFilterMenu
-                      CharacterFilters={FilterOptions.Characters}
-                      SelectedCharacters={replayFilter.Characters}
-                      handleSelected={handleCharacterSelected}
-                    />
-                  )}
-                  {selectedFilterOptions == "Stage" && (
-                    <StageFilter
-                      Stages={FilterOptions.Stage}
-                      SelectedStage={replayFilter.Stage}
-                      handleStageSelected={handleStageSelected}
-                    />
-                  )}
-                </MenuList>
-              </ClickAwayListener>
-            </Paper>
-          </Grow>
-        )}
-      </Popper>
-    </div>
-  );
-});
+        <div>
+          <ButtonGroup ref={anchorRef} aria-label="Button group with a nested menu">
+            <Button
+              variant={replayFilter.Stage.id != 0 ? "contained" : "outlined"}
+              onClick={() => handleFilterMenuToggle("Stage")}
+            >
+              {replayFilter.Stage.id != 0 ? replayFilter.Stage.name : "Stage"}
+            </Button>
+            <Button
+              onClick={() => handleFilterMenuToggle("Characters")}
+              variant={replayFilter.Characters.length > 0 ? "contained" : "outlined"}
+            >
+              {replayFilter.Characters.length === 0 ? "Characters" : replayFilter.Characters.length + " selected"}
+            </Button>
+          </ButtonGroup>
+        </div>
+        <div>
+          <Button variant="outlined" color="error" onClick={clearFilters}>
+            <ClearIcon color="error" fontSize="small" />
+          </Button>
+        </div>
+        <Popper
+          sx={{ zIndex: 1 }}
+          open={open}
+          anchorEl={anchorRef.current}
+          role={undefined}
+          transition={true}
+          disablePortal={true}
+          style={{ width: "40%" }}
+        >
+          {({ TransitionProps, placement }) => (
+            <Grow
+              {...TransitionProps}
+              style={{
+                transformOrigin: placement === "bottom" ? "center top" : "center bottom",
+              }}
+            >
+              <Paper>
+                <ClickAwayListener onClickAway={handleClose}>
+                  <MenuList id="split-button-menu" autoFocusItem={true}>
+                    {selectedFilterOptions == "Characters" && (
+                      <CharacterFilterMenu
+                        CharacterFilters={FilterOptions.Characters}
+                        SelectedCharacters={replayFilter.Characters}
+                        handleSelected={handleCharacterSelected}
+                      />
+                    )}
+                    {selectedFilterOptions == "Stage" && (
+                      <StageFilter
+                        Stages={FilterOptions.Stage}
+                        SelectedStage={replayFilter.Stage}
+                        handleStageSelected={handleStageSelected}
+                      />
+                    )}
+                  </MenuList>
+                </ClickAwayListener>
+              </Paper>
+            </Grow>
+          )}
+        </Popper>
+      </div>
+    );
+  }
+};
