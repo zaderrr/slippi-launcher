@@ -19,9 +19,7 @@ export const useReplayFilter = create(
       setSortDirection: (sortDirection: SortDirection) => set({ sortDirection }),
       setStagePlayed: (stagePlayed: number) => set({ stagePlayed }),
       setHideShortGames: (hideShortGames: boolean) => set({ hideShortGames }),
-      setCharacters: (characters: number[]) => {
-        set({ characters });
-      },
+      setCharacters: (characters: number[]) => set({ characters }),
       resetFilter: () => {
         set({
           searchText: "",

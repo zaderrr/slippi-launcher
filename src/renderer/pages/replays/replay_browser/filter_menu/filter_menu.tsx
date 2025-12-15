@@ -103,7 +103,6 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
     setCharacters(StoreArr);
     setOpen(false);
   };
-  console.log("Filters");
   const clearFilters = () => {
     const defaultFilters = {
       Stage: { id: 0, name: "unselected" },
@@ -112,6 +111,7 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
     setReplayFilter(defaultFilters);
     clearStoreFilters();
   };
+
   if (showFilters == false) {
     return null;
   } else {
