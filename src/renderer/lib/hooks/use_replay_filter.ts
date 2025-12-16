@@ -10,7 +10,7 @@ export const useReplayFilter = create(
       sortBy: ReplaySortOption.DATE,
       sortDirection: SortDirection.DESC,
       stagePlayed: 0,
-      player: {},
+      player: <PlayerFilter>{ type: "player" },
       hideShortGames: true,
       characters: <number[]>[],
     },
@@ -25,9 +25,9 @@ export const useReplayFilter = create(
       resetFilter: () => {
         set({
           searchText: "",
-          hideShortGames: false,
           stagePlayed: 0,
           characters: [],
+          player: { type: "player" },
         });
       },
     }),
@@ -42,6 +42,7 @@ export const buildReplayFilters = (
   searchText: string,
   stagePlayed: number,
   characters: number[],
+  player: PlayerFilter,
 ): ReplayFilter[] => {
   const filters: ReplayFilter[] = [];
   if (hideShortGames) {
@@ -61,7 +62,9 @@ export const buildReplayFilters = (
   if (stagePlayed != 0) {
     filters.push({ type: "stage", stage: stagePlayed });
   }
-
+  if (player) {
+    filters.push(player);
+  }
   if (characters && characters.length > 0) {
     filters.push({ type: "player", characterIds: characters });
   }

@@ -54,6 +54,7 @@ export const FilterToolbar = React.forwardRef<HTMLInputElement, FilterToolbarPro
   const sortDirection = useReplayFilter((store) => store.sortDirection);
   const setSortDirection = useReplayFilter((store) => store.setSortDirection);
   const [searchText, setSearchText] = React.useState(storeSearchText ?? "");
+  const playerFilter = useReplayFilter((store) => store.player);
   const [filterEnabled, setFilterEnabled] = React.useState(false);
   const { showError } = useToasts();
 
@@ -79,7 +80,7 @@ export const FilterToolbar = React.forwardRef<HTMLInputElement, FilterToolbarPro
       return;
     }
     presenter.loadFolder(currentFolder, true).catch(showError);
-  }, [sortBy, sortDirection, hideShortGames, storeSearchText, storeStagePlayed, storeCharacters]);
+  }, [sortBy, sortDirection, hideShortGames, storeSearchText, storeStagePlayed, storeCharacters, playerFilter]);
 
   return (
     <>
