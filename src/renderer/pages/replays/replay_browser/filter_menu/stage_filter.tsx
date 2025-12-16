@@ -7,14 +7,14 @@ export const StageFilter = ({
 }: {
   handleStageSelected: (Stage: { id: number; name: string }) => void;
   Stages: { id: number; name: string }[];
-  SelectedStage: { id: number; name: string };
+  SelectedStage: number;
 }) => {
   return (
     <>
       {Stages.map((option, index) => (
         <MenuItem
           key={index}
-          selected={SelectedStage.id === option.id}
+          selected={SelectedStage == option.id}
           onClick={() => handleStageSelected(option)}
           style={{ width: "100%" }}
         >
