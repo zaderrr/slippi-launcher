@@ -13,74 +13,49 @@ import { useReplayFilter } from "@/lib/hooks/use_replay_filter";
 
 import { CharacterFilterMenu } from "./character_filter";
 import { StageFilter } from "./stage_filter";
+
+const IGNORE_CHARACTERS = [
+  "Master Hand",
+  "Popo",
+  "Wireframe (Male)",
+  "Wireframe (Female)",
+  "Gigabowser",
+  "Crazy Hand",
+  "Sandbag",
+];
+
+const LEGAL_STAGE_IDS = [2, 3, 8, 28, 31, 32];
+
+const FILTER_OPTIONS: {
+  Stage: { id: number; name: string }[];
+  Characters: charUtils.CharacterInfo[];
+} = {
+  Stage: LEGAL_STAGE_IDS.map((id) => ({ id, name: stageUtils.getStageName(id) })),
+  Characters: charUtils.getAllCharacters().filter((character) => !IGNORE_CHARACTERS.includes(character.name)),
+};
+
 export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
   const [open, setOpen] = useState(false);
   const [selectedFilterOptions, setSelectedFilterOptions] = useState<string>();
-  const [replayFilter, setReplayFilter] = useState<ReplayFilter>({
-    Stage: { id: 0, name: "unselected" },
-    Characters: [],
-  });
   const clearStoreFilters = useReplayFilter((store) => store.resetFilter);
   const setStagePlayed = useReplayFilter((store) => store.setStagePlayed);
+  const stageFilter = useReplayFilter((store) => store.stagePlayed);
+  const charactersFilter = useReplayFilter((store) => store.characters);
   const setCharacters = useReplayFilter((store) => store.setCharacters);
   const anchorRef = useRef<HTMLDivElement>(null);
-  //List of characters to ignore - May want to include it, but as an easy way to filter out "non-standard" characters
-  const IgnoreCharacters = [
-    "Master Hand",
-    "Popo",
-    "Wireframe (Male)",
-    "Wireframe (Female)",
-    "Gigabowser",
-    "Crazy Hand",
-    "Sandbag",
-  ];
-  const getAllCharcters = () => {
-    const AllChars = charUtils.getAllCharacters();
-    const names: charUtils.CharacterInfo[] = [];
-    AllChars.forEach((character) => {
-      //Filter out ignored characters
-      if (!IgnoreCharacters.includes(character.name)) {
-        names.push(character);
-      }
-    });
-    return names;
-  };
-  const FilterOptions: {
-    Stage: { id: number; name: string }[];
-    Characters: charUtils.CharacterInfo[];
-  } = {
-    Stage: [
-      //Only get legal stages, can easily be expanded.
-      //FOD,PS,YS,DL,BF,FD respectively
-      { id: 2, name: stageUtils.getStageName(2) },
-      { id: 3, name: stageUtils.getStageName(3) },
-      { id: 8, name: stageUtils.getStageName(8) },
-      { id: 28, name: stageUtils.getStageName(28) },
-      { id: 31, name: stageUtils.getStageName(31) },
-      { id: 32, name: stageUtils.getStageName(32) },
-    ],
-    Characters: getAllCharcters(),
-  };
 
-  interface ReplayFilter {
-    Stage: { id: number; name: string };
-    Characters: number[];
-  }
   const handleStageSelected = (Stage: { id: number; name: string }) => {
-    const NewFilter: ReplayFilter = { Stage: replayFilter.Stage, Characters: replayFilter.Characters };
-    if (replayFilter.Stage.id == Stage.id) {
-      NewFilter.Stage = { id: 0, name: "unselected" };
+    if (stageFilter == Stage.id) {
+      setStagePlayed(0);
     } else {
-      NewFilter.Stage = Stage;
+      setStagePlayed(Stage.id);
     }
     setOpen(false);
-    setStagePlayed(NewFilter.Stage.id);
-    setReplayFilter(NewFilter);
   };
 
   const handleFilterMenuToggle = (menu: "Stage" | "Characters") => {
     setSelectedFilterOptions(menu);
-    setOpen((prevOpen) => !prevOpen);
+    setOpen((prevOpen) => (selectedFilterOptions === menu ? !prevOpen : true));
   };
   const handleClose = (event: Event) => {
     if (anchorRef.current && anchorRef.current.contains(event.target as HTMLElement)) {
@@ -89,26 +64,16 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
     setOpen(false);
   };
   const handleCharacterSelected = (CharacterID: number) => {
-    const SelectedChar = charUtils.getCharacterInfo(CharacterID);
-    const NewFilter: ReplayFilter = { Stage: replayFilter.Stage, Characters: replayFilter.Characters };
-    const index = replayFilter.Characters.indexOf(SelectedChar.id);
+    const SelectedCharacters = [...charactersFilter];
+    const index = SelectedCharacters.findIndex((x) => x == CharacterID);
     if (index > -1) {
-      NewFilter.Characters.splice(index, 1);
+      SelectedCharacters.splice(index, 1);
     } else {
-      NewFilter.Characters.push(SelectedChar.id);
+      SelectedCharacters.push(CharacterID);
     }
-    setReplayFilter(NewFilter);
-    let StoreArr: number[] = [];
-    StoreArr = StoreArr.concat(NewFilter.Characters);
-    setCharacters(StoreArr);
-    setOpen(false);
+    setCharacters(SelectedCharacters);
   };
   const clearFilters = () => {
-    const defaultFilters = {
-      Stage: { id: 0, name: "unselected" },
-      Characters: [],
-    };
-    setReplayFilter(defaultFilters);
     clearStoreFilters();
   };
 
@@ -121,7 +86,6 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
           display: "flex",
           flexDirection: "row",
           justifyContent: "space-between",
-          height: "40px",
           backgroundColor: "#1B0B28",
           background: "linear-gradient(180deg,rgba(27, 11, 40, 1) 0%, rgba(41, 19, 59, 1) 100%)",
           padding: "10px",
@@ -130,16 +94,16 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
         <div>
           <ButtonGroup ref={anchorRef} aria-label="Button group with a nested menu">
             <Button
-              variant={replayFilter.Stage.id != 0 ? "contained" : "outlined"}
+              variant={stageFilter != 0 ? "contained" : "outlined"}
               onClick={() => handleFilterMenuToggle("Stage")}
             >
-              {replayFilter.Stage.id != 0 ? replayFilter.Stage.name : "Stage"}
+              {stageFilter != 0 ? FILTER_OPTIONS.Stage.find((x) => x.id == stageFilter)?.name : "Stage"}
             </Button>
             <Button
               onClick={() => handleFilterMenuToggle("Characters")}
-              variant={replayFilter.Characters.length > 0 ? "contained" : "outlined"}
+              variant={charactersFilter.length > 0 ? "contained" : "outlined"}
             >
-              {replayFilter.Characters.length === 0 ? "Characters" : replayFilter.Characters.length + " selected"}
+              {charactersFilter.length === 0 ? "Characters" : charactersFilter.length + " selected"}
             </Button>
           </ButtonGroup>
         </div>
@@ -169,15 +133,15 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
                   <MenuList id="split-button-menu" autoFocusItem={true}>
                     {selectedFilterOptions == "Characters" && (
                       <CharacterFilterMenu
-                        CharacterFilters={FilterOptions.Characters}
-                        SelectedCharacters={replayFilter.Characters}
+                        CharacterFilters={FILTER_OPTIONS.Characters}
+                        SelectedCharacters={charactersFilter}
                         handleSelected={handleCharacterSelected}
                       />
                     )}
                     {selectedFilterOptions == "Stage" && (
                       <StageFilter
-                        Stages={FilterOptions.Stage}
-                        SelectedStage={replayFilter.Stage}
+                        Stages={FILTER_OPTIONS.Stage}
+                        SelectedStage={stageFilter}
                         handleStageSelected={handleStageSelected}
                       />
                     )}
