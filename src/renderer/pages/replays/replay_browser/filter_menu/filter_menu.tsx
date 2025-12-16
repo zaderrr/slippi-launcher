@@ -1,3 +1,4 @@
+import { Tune } from "@mui/icons-material";
 import ClearIcon from "@mui/icons-material/Clear";
 import Button from "@mui/material/Button";
 import ButtonGroup from "@mui/material/ButtonGroup";
@@ -11,6 +12,7 @@ import { useRef, useState } from "react";
 
 import { useReplayFilter } from "@/lib/hooks/use_replay_filter";
 
+import { AdvancedFilter } from "../advanced_filter/advanced_filter";
 import { CharacterFilterMenu } from "./character_filter";
 import { StageFilter } from "./stage_filter";
 
@@ -38,6 +40,7 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
   const [open, setOpen] = useState(false);
   const [selectedFilterOptions, setSelectedFilterOptions] = useState<string>();
   const clearStoreFilters = useReplayFilter((store) => store.resetFilter);
+  const [showDialog, setShowDialog] = useState(false);
   const setStagePlayed = useReplayFilter((store) => store.setStagePlayed);
   const stageFilter = useReplayFilter((store) => store.stagePlayed);
   const charactersFilter = useReplayFilter((store) => store.characters);
@@ -73,6 +76,7 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
     }
     setCharacters(SelectedCharacters);
   };
+
   const clearFilters = () => {
     clearStoreFilters();
   };
@@ -108,10 +112,14 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
           </ButtonGroup>
         </div>
         <div>
+          <Button variant="text" onClick={setShowDialog}>
+            <Tune />
+          </Button>
           <Button variant="outlined" color="error" onClick={clearFilters}>
             <ClearIcon color="error" fontSize="small" />
           </Button>
         </div>
+        <AdvancedFilter showDialog={showDialog} setShowDialog={setShowDialog} />
         <Popper
           sx={{ zIndex: 1 }}
           open={open}

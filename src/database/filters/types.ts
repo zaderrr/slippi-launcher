@@ -85,7 +85,18 @@ export type StageFilter = {
   stage: number; // Stage ID
 };
 
-export type ReplayFilter = DurationFilter | PlayerFilter | GameModeFilter | TextSearchFilter | StageFilter;
+/**
+ * Filters by game data,
+ *
+ */
+export type GameFilter = {
+  type: "game";
+  date?: Date;
+  characterIds?: number[];
+  length?: number;
+};
+
+export type ReplayFilter = DurationFilter | PlayerFilter | GameModeFilter | TextSearchFilter | StageFilter | GameFilter;
 
 // Game mode constants
 const GameModeValue = {

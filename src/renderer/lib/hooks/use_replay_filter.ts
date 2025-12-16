@@ -1,4 +1,4 @@
-import type { ReplayFilter } from "@database/filters/types";
+import type { PlayerFilter, ReplayFilter } from "@database/filters/types";
 import { create } from "zustand";
 import { combine } from "zustand/middleware";
 
@@ -10,6 +10,7 @@ export const useReplayFilter = create(
       sortBy: ReplaySortOption.DATE,
       sortDirection: SortDirection.DESC,
       stagePlayed: 0,
+      player: {},
       hideShortGames: true,
       characters: <number[]>[],
     },
@@ -20,6 +21,7 @@ export const useReplayFilter = create(
       setStagePlayed: (stagePlayed: number) => set({ stagePlayed }),
       setHideShortGames: (hideShortGames: boolean) => set({ hideShortGames }),
       setCharacters: (characters: number[]) => set({ characters }),
+      setPlayer: (player: PlayerFilter) => set({ player }),
       resetFilter: () => {
         set({
           searchText: "",
