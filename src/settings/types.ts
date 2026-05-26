@@ -56,6 +56,7 @@ export interface SettingsSchema {
   enableJukebox: boolean;
   launchMeleeOnPlay: boolean;
   autoUpdateLauncher: boolean;
+  enableLocationAccess: boolean;
 
   // Dolphin settings
   useNetplayBeta: boolean;
@@ -64,6 +65,9 @@ export interface SettingsSchema {
   // Spectate settings
   enableSpectateRemoteControl: boolean;
   spectateRemoteControlPort: number;
+
+  // Appearance settings
+  enableRankDisplay: boolean;
 }
 
 /**

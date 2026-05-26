@@ -1,29 +1,22 @@
-import { css } from "@emotion/react";
 import Button from "@mui/material/Button";
 import React from "react";
-import { useQuery } from "react-query";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { LoadingScreen } from "@/components/loading_screen/loading_screen";
+import { useNewsFeedQuery } from "@/lib/hooks/use_data_fetch_query";
+import { useRouteMemory } from "@/lib/hooks/use_route_memory";
 
-import { AdBanner } from "./ad_banner";
-import { NewsArticleContainer as NewsArticle } from "./news_article/news_article.container";
+import { NewsDualPane } from "./news_dual_pane/news_dual_pane";
 import { NewsFeedMessages as Messages } from "./news_feed.messages";
 
-const ITEMS_TO_SHOW = 7;
-const BATCH_SIZE = 5;
-
-const NewsFeedContent = React.memo(function NewsFeedContent() {
-  const [numItemsToShow, setNumItemsToShow] = React.useState(ITEMS_TO_SHOW);
-  const newsFeedQuery = useQuery(["newsFeedQuery"], window.electron.common.fetchNewsFeed);
-  const { isLoading, error, data: allPosts = [], refetch } = newsFeedQuery;
-
-  const onShowMore = React.useCallback(() => {
-    setNumItemsToShow(numItemsToShow + BATCH_SIZE);
-  }, [setNumItemsToShow, numItemsToShow]);
-
-  const posts = React.useMemo(() => {
-    return numItemsToShow <= 0 ? allPosts : allPosts.slice(0, numItemsToShow);
-  }, [allPosts, numItemsToShow]);
+const NewsFeedContent = React.memo(function NewsFeedContent({
+  newsId,
+  onNewsIdChange,
+}: {
+  newsId: string | null;
+  onNewsIdChange: (id: string | null) => void;
+}) {
+  const { isLoading, error, data: allPosts = [], refetch } = useNewsFeedQuery();
 
   if (isLoading) {
     return <LoadingScreen message={Messages.loading()} />;
@@ -31,19 +24,8 @@ const NewsFeedContent = React.memo(function NewsFeedContent() {
 
   if (error) {
     return (
-      <div
-        css={css`
-          display: flex;
-          align-items: center;
-        `}
-      >
-        <div
-          css={css`
-            margin-right: 10px;
-          `}
-        >
-          {Messages.failedToFetch()}
-        </div>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ marginRight: 10 }}>{Messages.failedToFetch()}</div>
         <Button color="primary" variant="text" size="small" onClick={() => refetch()}>
           {Messages.tryAgain()}
         </Button>
@@ -51,32 +33,44 @@ const NewsFeedContent = React.memo(function NewsFeedContent() {
     );
   }
 
-  return (
-    <div>
-      {posts.map((post) => (
-        <NewsArticle key={post.id} item={post} />
-      ))}
-      {allPosts.length > posts.length && (
-        <div
-          css={css`
-            text-align: center;
-          `}
-        >
-          <Button color="primary" variant="contained" size="small" onClick={onShowMore}>
-            {Messages.showMore()}
-          </Button>
-        </div>
-      )}
-      <AdBanner />
-    </div>
-  );
+  return <NewsDualPane posts={allPosts} selectedNewsId={newsId} onSelectedNewsIdChange={onNewsIdChange} />;
 });
 
 export const NewsFeed = React.memo(function NewsFeed() {
+  const params = useParams();
+  const navigate = useNavigate();
+
+  const urlNewsId = (params["*"] as string) || null;
+
+  const memorizedNewsId = useRouteMemory((s) => s.routeMemory["newsFeed"]) ?? null;
+  const setLastRoute = useRouteMemory((s) => s.setLastRoute);
+
+  React.useEffect(() => {
+    if (urlNewsId) {
+      setLastRoute("newsFeed", urlNewsId);
+    } else if (memorizedNewsId) {
+      navigate(memorizedNewsId, { relative: "route", replace: true });
+    }
+  }, [urlNewsId, memorizedNewsId, navigate, setLastRoute]);
+
+  const handleNewsIdChange = React.useCallback(
+    (id: string | null) => {
+      if (id) {
+        setLastRoute("newsFeed", id);
+        navigate(id, { relative: "route" });
+      } else {
+        setLastRoute("newsFeed", "");
+        navigate("..");
+      }
+    },
+    [navigate, setLastRoute],
+  );
+
+  const newsId = urlNewsId ?? memorizedNewsId;
+
   return (
-    <>
-      <h1>{Messages.latestNews()}</h1>
-      <NewsFeedContent />
-    </>
+    <div style={{ height: "100%", overflow: "hidden" }}>
+      <NewsFeedContent newsId={newsId} onNewsIdChange={handleNewsIdChange} />
+    </div>
   );
 });

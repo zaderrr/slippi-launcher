@@ -1,16 +1,20 @@
 import { partition } from "@common/partition";
 import type { NewsItem } from "@common/types";
-import log from "electron-log";
+import electronLog from "electron-log";
 import TurndownService from "turndown";
 
 import { getBlueskyFeed } from "./fetch_cross_origin/bluesky";
 import { getAllReleases } from "./fetch_cross_origin/github";
 import { getMediumFeed } from "./fetch_cross_origin/medium";
 
+const log = electronLog.scope("news_feed");
+
 const turndownService = new TurndownService();
 
 export async function fetchNewsFeedData(): Promise<NewsItem[]> {
+  const totalStart = Date.now();
   const newsPromises: Promise<NewsItem[]>[] = [];
+  log.info("Fetching news feed data...");
   newsPromises.push(fetchMediumNews());
   newsPromises.push(fetchGithubReleaseNews(["Ishiiruka", "slippi-launcher", "dolphin"]));
   newsPromises.push(fetchBlueskyPosts());
@@ -24,17 +28,14 @@ export async function fetchNewsFeedData(): Promise<NewsItem[]> {
     log.error(newsPromise.reason);
   });
 
-  return allNews
-    .flatMap((news) => news.value)
-    .sort((a, b) => {
-      // Sort all news item by reverse chronological order
-      const aDate = new Date(a.publishedAt).getTime();
-      const bDate = new Date(b.publishedAt).getTime();
-      return bDate - aDate;
-    });
+  log.info(`Total fetchNewsFeedData completed in ${Date.now() - totalStart}ms`);
+
+  return allNews.flatMap((news) => news.value).sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
 }
 
 async function fetchMediumNews(): Promise<NewsItem[]> {
+  const start = Date.now();
+  log.info("Fetching Medium news...");
   const result = await getMediumFeed("project-slippi");
 
   if (result.status !== "ok" || result.items === undefined) {
@@ -43,14 +44,18 @@ async function fetchMediumNews(): Promise<NewsItem[]> {
     return [];
   }
 
+  log.info(`Medium news fetched in ${Date.now() - start}ms`);
+
   return result.items.map((post): NewsItem => {
     // Parse the Medium pubDate format: "YYYY-MM-DD HH:MM:SS"
-    const publishedAt = new Date(post.pubDate.replace(" ", "T") + "Z").toISOString();
+    const publishedAt = new Date(post.pubDate.replace(" ", "T") + "Z");
     // The NewsItem content needs to be in markdown format so convert the raw HTML content to markdown
     const bodyMarkdown = turndownService.turndown(post.content);
 
+    // The post.guid from Medium can contain special characters that break the id string
+    const safeId = makeUrlSafe(post.guid);
     return {
-      id: `medium-${post.guid}`,
+      id: `medium-${safeId}`,
       source: "medium",
       imageUrl: post.thumbnail || undefined,
       title: post.title,
@@ -63,6 +68,8 @@ async function fetchMediumNews(): Promise<NewsItem[]> {
 }
 
 async function fetchGithubReleaseNews(repos: string[]): Promise<NewsItem[]> {
+  const start = Date.now();
+  log.info(`Fetching Github releases for ${repos.join(", ")}...`);
   const allReleases = await Promise.allSettled(
     repos.map(async (repo) => {
       const releases = await getAllReleases("project-slippi", repo);
@@ -72,12 +79,14 @@ async function fetchGithubReleaseNews(repos: string[]): Promise<NewsItem[]> {
           source: "github",
           title: `[${repo}] ${release.name}`,
           body: release.body,
-          publishedAt: release.published_at,
+          publishedAt: new Date(release.published_at),
           permalink: release.html_url,
         };
       });
     }),
   );
+
+  log.info(`Github releases fetched in ${Date.now() - start}ms`);
 
   return allReleases.flatMap((promise): NewsItem[] => {
     if (promise.status === "fulfilled") {
@@ -90,16 +99,15 @@ async function fetchGithubReleaseNews(repos: string[]): Promise<NewsItem[]> {
 }
 
 async function fetchBlueskyPosts(): Promise<NewsItem[]> {
-  const result = await getBlueskyFeed();
-  if (result.error || result.feed === undefined) {
-    log.error("Error fetching Bluesky feed:");
-    log.error(result);
-    return [];
-  }
+  const start = Date.now();
+  log.info("Fetching Bluesky posts...");
+  const feed = await getBlueskyFeed("did:plc:6xwud4csg7p7243ptrc5sa5y");
 
-  const news = result.feed.map((entry): NewsItem => {
+  log.info(`Bluesky posts fetched in ${Date.now() - start}ms`);
+
+  const news = feed.map((entry): NewsItem => {
     const post = entry.post;
-    const publishedAt = new Date(post.record.createdAt).toISOString();
+    const publishedAt = new Date(post.record.createdAt);
     return {
       id: `bluesky-${post.cid}`,
       source: "bluesky",
@@ -112,4 +120,10 @@ async function fetchBlueskyPosts(): Promise<NewsItem[]> {
     };
   });
   return news;
+}
+
+function makeUrlSafe(text: string) {
+  const encoded = Buffer.from(text, "utf8").toString("base64");
+  const urlSafe = encoded.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return urlSafe;
 }

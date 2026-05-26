@@ -49,6 +49,7 @@ log.transports.file.level = isDevelopment ? "info" : "warn";
 // In dev mode, both main and renderer import electron-log, which causes duplication
 if (isDevelopment) {
   log.transports.ipc.level = false;
+  app.commandLine.appendSwitch("remote-debugging-port", "9222");
 }
 
 // Only allow a single Slippi App instance
@@ -58,7 +59,7 @@ if (!lockObtained) {
 }
 
 const flags = getConfigFlags();
-const { dolphinManager, settingsManager } = installModules(flags);
+const { dolphinManager, settingsManager, browserWindowManager } = installModules(flags);
 
 class AppUpdater {
   constructor() {
@@ -108,7 +109,7 @@ const createWindow = async () => {
   mainWindow = new BrowserWindow({
     show: false,
     width: 1100,
-    height: 728,
+    height: 750,
     minHeight: isDevelopment ? undefined : 450,
     minWidth: isDevelopment ? undefined : 900,
     backgroundColor: BACKGROUND_COLOR,
@@ -149,6 +150,7 @@ const createWindow = async () => {
 
   const menuBuilder = new MenuBuilder({
     mainWindow,
+    browserWindowManager,
     onOpenPreferences: () => {
       void openPreferences().catch(log.error);
     },
