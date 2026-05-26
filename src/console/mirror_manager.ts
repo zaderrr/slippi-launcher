@@ -152,7 +152,7 @@ export class MirrorManager extends EventEmitter {
       autoSwitcher.on(MirrorEvent.ERROR, (err) => this.emit(MirrorEvent.ERROR, err));
     }
 
-    fileWriter.on(SlpStreamEvent.COMMAND, (data) => {
+    fileWriter.getProcessor().on(SlpStreamEvent.COMMAND, (data) => {
       if (!autoSwitcher && !relay) {
         return;
       }
@@ -161,7 +161,7 @@ export class MirrorManager extends EventEmitter {
         case Command.POST_FRAME_UPDATE: {
           const frame = (payload as PostFrameUpdateType).frame;
           // Only show OBS source in the later portion of the game loading stage
-          if (frame !== null && frame >= -60) {
+          if (frame != null && frame >= -60) {
             if (autoSwitcher) {
               autoSwitcher.handleStatusOutput();
             }

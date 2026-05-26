@@ -79,7 +79,9 @@ export const useSpectateRemoteControlPort = () => useSetting("spectateRemoteCont
 
 export const useRootSlpPath = () => useSetting("rootSlpPath");
 
-export const useMonthlySubfolders = () => useSetting("useMonthlySubfolders");
+export const useEnableNetplayReplays = () => useSetting("enableNetplayReplays");
+
+export const useEnableMonthlySubfolders = () => useSetting("useMonthlySubfolders");
 
 export const useEnableJukebox = () => useSetting("enableJukebox");
 
@@ -90,6 +92,10 @@ export const useExtraSlpPaths = () => useSetting("extraSlpPaths");
 export const useLaunchMeleeOnPlay = () => useSetting("launchMeleeOnPlay");
 
 export const useAutoUpdateLauncher = () => useSetting("autoUpdateLauncher");
+
+export const useEnableLocationAccess = () => useSetting("enableLocationAccess");
+
+export const useEnableRankDisplay = () => useSetting("enableRankDisplay");
 
 export const useDolphinBeta = (dolphinType: DolphinLaunchType) => {
   const netplayBeta = useSettingsStore((state) => state.settings.useNetplayBeta);

@@ -1,0 +1,24 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  align-items: center;
+}
+
+.centered {
+  justify-content: center;
+}
+
+.previewContainer {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.buttonContainer {
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}

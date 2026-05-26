@@ -2,7 +2,7 @@
   "name": "slippi-launcher",
   "productName": "Slippi Launcher",
   "description": "Launch Slippi Online, browse and watch saved replays",
-  "version": "2.13.1",
+  "version": "2.14.2",
   "main": "./dist/main/main.js",
   "author": {
     "name": "Jas Laferriere",
@@ -16,8 +16,8 @@
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",
-    "kysely": "^0.26.3",
-    "kysely-sqlite-worker": "^0.4.5",
+    "kysely": "^0.28.17",
+    "kysely-sqlite-worker": "^1.2.1",
     "threads": "^1.6.5",
     "websocket": "^1.0.34"
   },

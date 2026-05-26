@@ -3,7 +3,6 @@ import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import Tooltip from "@mui/material/Tooltip";
-import stylex from "@stylexjs/stylex";
 import { format, formatDistance } from "date-fns";
 import React from "react";
 
@@ -15,23 +14,7 @@ import { BlueskyPost } from "./bluesky_post";
 import { GithubPost } from "./github_post";
 import { MediumPost } from "./medium_post";
 import { NewsArticleMessages as Messages } from "./news_article.messages";
-
-const styles = stylex.create({
-  container: {
-    marginBottom: 20,
-  },
-  dateInfo: {
-    marginRight: "auto",
-    marginLeft: 5,
-    opacity: 0.6,
-    fontSize: 15,
-  },
-  cardActions: {
-    borderTopWidth: 1,
-    borderTopStyle: "solid",
-    borderTopColor: "rgba(255, 255, 255, 0.2)",
-  },
-});
+import styles from "./news_article.module.css";
 
 function getViewPostButtonText(source: NewsItem["source"]) {
   switch (source) {
@@ -47,16 +30,17 @@ function getViewPostButtonText(source: NewsItem["source"]) {
 export const NewsArticle = React.memo(function NewsArticle({
   item,
   currentLanguage,
+  autoTruncate,
 }: {
   item: NewsItem;
   currentLanguage: SupportedLanguage;
+  autoTruncate?: boolean;
 }) {
   const { permalink, publishedAt } = item;
 
-  const publishedDate = new Date(publishedAt);
   const dateFnsLocale = getLocale(currentLanguage);
-  const localDateString = format(publishedDate, "PPP p", { locale: dateFnsLocale });
-  const timeAgo = formatDistance(publishedDate, new Date(), {
+  const localDateString = format(publishedAt, "PPP p", { locale: dateFnsLocale });
+  const timeAgo = formatDistance(publishedAt, new Date(), {
     addSuffix: true,
     locale: dateFnsLocale,
   });
@@ -66,25 +50,23 @@ export const NewsArticle = React.memo(function NewsArticle({
       case "bluesky":
         return <BlueskyPost item={item} />;
       case "medium":
-        return <MediumPost item={item} />;
+        return <MediumPost item={item} autoTruncate={autoTruncate} />;
       case "github":
         return <GithubPost item={item} />;
     }
-  }, [item]);
+  }, [item, autoTruncate]);
 
   return (
-    <div {...stylex.props(styles.container)}>
-      <Card>
-        {postContent}
-        <CardActions disableSpacing={true} {...stylex.props(styles.cardActions)}>
-          <Tooltip title={localDateString}>
-            <div {...stylex.props(styles.dateInfo)}>{Messages.posted(timeAgo)}</div>
-          </Tooltip>
-          <Button LinkComponent={ExternalLink} size="small" color="primary" href={permalink}>
-            {getViewPostButtonText(item.source)}
-          </Button>
-        </CardActions>
-      </Card>
-    </div>
+    <Card>
+      {postContent}
+      <CardActions disableSpacing={true} className={styles.cardActions}>
+        <Tooltip title={localDateString}>
+          <div className={styles.dateInfo}>{Messages.posted(timeAgo)}</div>
+        </Tooltip>
+        <Button LinkComponent={ExternalLink} size="small" color="primary" href={permalink}>
+          {getViewPostButtonText(item.source)}
+        </Button>
+      </CardActions>
+    </Card>
   );
 });

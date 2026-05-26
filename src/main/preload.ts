@@ -5,11 +5,15 @@ import spectateRemoteApi from "@remote/api";
 import replaysApi from "@replays/api";
 import settingsApi from "@settings/api";
 import { contextBridge, ipcRenderer, shell, webUtils } from "electron";
+import fs from "fs-extra";
 import path from "path";
 import { isSubdirectory } from "utils/is_subdirectory";
 
 import commonApi from "./api";
 import type { AppBootstrap } from "./bootstrap";
+import { fetchCurrentLocation } from "./fetch_cross_origin/ip_api";
+import { fetchUpcomingMeleeMajors } from "./fetch_cross_origin/melee_majors";
+import { fetchNearestTournaments } from "./fetch_cross_origin/smash_map";
 
 const bootstrap = ipcRenderer.sendSync("getAppBootstrapSync") as AppBootstrap;
 
@@ -24,6 +28,7 @@ const api = {
   remote: spectateRemoteApi,
   utils: {
     isSubdirectory,
+    pathExists: (folder: string) => fs.pathExists(folder),
     // This is needed since Electron won't return the full file path anymore
     getFilePath: (file: File): string => {
       // This returns the absolute path on disk
@@ -37,6 +42,11 @@ const api = {
     openPath: shell.openPath,
     openExternal: shell.openExternal,
     showItemInFolder: shell.showItemInFolder,
+  },
+  fetch: {
+    fetchCurrentLocation,
+    fetchNearestTournaments,
+    fetchUpcomingMeleeMajors,
   },
 };
 

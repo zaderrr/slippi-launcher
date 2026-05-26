@@ -4,7 +4,7 @@ import styled from "@emotion/styled";
 import { ExternalLink as A } from "@/components/external_link";
 import { getColor } from "@/lib/player_colors";
 import { getCharacterIcon } from "@/lib/utils";
-import { colors } from "@/styles/colors";
+import { cssVar } from "@/styles/css_variables";
 import { withFont } from "@/styles/with_font";
 
 type PlayerInfoProps = {
@@ -32,7 +32,7 @@ export const PlayerInfo = ({
 }: PlayerInfoProps) => {
   const port = playerIndex + 1;
   const backupName = type === 1 ? "CPU" : `Player ${port}`;
-  const charIcon = getCharacterIcon(characterId ?? null, characterColor);
+  const charIcon = getCharacterIcon(characterId, characterColor);
   const slippiProfileUrl = `https://slippi.gg/user/${connectCode?.split("#").join("-")}`;
   return (
     <Outer>
@@ -67,7 +67,7 @@ export const PlayerInfo = ({
           <span
             css={css`
               display: inline-block;
-              color: ${colors.grayDark};
+              color: ${cssVar("grayDark")};
               font-weight: bold;
               background-color: ${getColor(port, isTeams ? teamId : undefined)};
               padding: 2px 6px;

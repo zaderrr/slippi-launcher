@@ -8,7 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import type { FileResult } from "@replays/types";
 import { GameMode } from "@slippi/slippi-js";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import { BasicFooter } from "@/components/footer/footer";
 import { LoadingScreen } from "@/components/loading_screen/loading_screen";
@@ -17,7 +17,7 @@ import { useDolphinActions } from "@/lib/dolphin/use_dolphin_actions";
 import { useMousetrap } from "@/lib/hooks/use_mousetrap";
 import { getStageImage } from "@/lib/utils";
 import { useServices } from "@/services";
-import { colors } from "@/styles/colors";
+import { cssVar } from "@/styles/css_variables";
 import { withFont } from "@/styles/with_font";
 
 import { GameProfile } from "./game_profile";
@@ -58,8 +58,8 @@ const Content = styled.div`
 type ReplayFileStatsProps = {
   filePath: string;
   file?: FileResult;
-  index: number | null;
-  total: number | null;
+  index?: number;
+  total?: number;
   onNext: () => void;
   onPrev: () => void;
   onClose: () => void;
@@ -71,14 +71,20 @@ export const ReplayFileStats = (props: ReplayFileStatsProps) => {
 
   const { dolphinService, replayService } = useServices();
   const { viewReplays } = useDolphinActions(dolphinService);
-  const gameStatsQuery = useQuery(["loadStatsQuery", filePath], async () => {
-    const result = await replayService.calculateGameStats(filePath);
-    return result;
+  const gameStatsQuery = useQuery({
+    queryKey: ["loadStatsQuery", filePath],
+    queryFn: async () => {
+      const result = await replayService.calculateGameStats(filePath);
+      return result;
+    },
   });
 
-  const stadiumStatsQuery = useQuery(["loadStadiumStatsQuery", filePath], async () => {
-    const result = await replayService.calculateStadiumStats(filePath);
-    return result;
+  const stadiumStatsQuery = useQuery({
+    queryKey: ["loadStadiumStatsQuery", filePath],
+    queryFn: async () => {
+      const result = await replayService.calculateStadiumStats(filePath);
+      return result;
+    },
   });
 
   const loading = gameStatsQuery.isLoading && stadiumStatsQuery.isLoading;
@@ -86,8 +92,8 @@ export const ReplayFileStats = (props: ReplayFileStatsProps) => {
 
   const file = gameStatsQuery.data?.file ?? props.file;
   const numPlayers = file?.game.players.length;
-  const gameStats = gameStatsQuery.data?.stats ?? null;
-  const stadiumStats = stadiumStatsQuery.data?.stadiumStats ?? null;
+  const gameStats = gameStatsQuery.data?.stats;
+  const stadiumStats = stadiumStatsQuery.data?.stadiumStats;
 
   // Add key bindings
   useMousetrap("escape", () => {
@@ -142,17 +148,17 @@ export const ReplayFileStats = (props: ReplayFileStatsProps) => {
         {...props}
         file={file}
         disabled={loading}
-        stats={gameStatsQuery.data?.stats ?? null}
-        stadiumStats={stadiumStatsQuery.data?.stadiumStats ?? null}
+        stats={gameStatsQuery.data?.stats}
+        stadiumStats={stadiumStatsQuery.data?.stadiumStats}
         onPlay={props.onPlay}
       />
       <Content>
         {!file || loading ? (
           <LoadingScreen message={Messages.crunchingNumbers()} />
         ) : game.mode == GameMode.TARGET_TEST ? (
-          <TargetTestProfile file={file} stats={stadiumStats}></TargetTestProfile>
+          <TargetTestProfile file={file} stats={stadiumStats} />
         ) : game.mode == GameMode.HOME_RUN_CONTEST ? (
-          <HomeRunProfile file={file} stats={stadiumStats}></HomeRunProfile>
+          <HomeRunProfile file={file} stats={stadiumStats} />
         ) : numPlayers !== 2 ? (
           <IconMessage Icon={ErrorIcon} label={Messages.gameStatsForTeamBattlesIsUnsupported()} />
         ) : error ? (
@@ -168,7 +174,7 @@ export const ReplayFileStats = (props: ReplayFileStatsProps) => {
           <IconButton onClick={handleRevealLocation} size="small">
             <FolderIcon
               css={css`
-                color: ${colors.purpleLight};
+                color: ${cssVar("purpleLight")};
               `}
             />
           </IconButton>

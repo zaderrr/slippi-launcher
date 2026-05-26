@@ -68,7 +68,7 @@ export const LoginForm = ({ onSuccess, disableAutoFocus, defaultEmail }: LoginFo
   const toggleSignUp = () => setIsSignUp(!isSignUp);
 
   const { execute, loading, error, clearError } = useAsync(async () => {
-    let user: AuthUser | null;
+    let user: AuthUser | undefined;
     if (isSignUp) {
       if (password !== confirmPassword) {
         throw new Error(Messages.passwordsDoNotMatch());
@@ -190,7 +190,6 @@ export const LoginForm = ({ onSuccess, disableAutoFocus, defaultEmail }: LoginFo
             size="small"
             css={css`
               text-transform: initial;
-              font-size: 14px;
             `}
           >
             {isSignUp ? Messages.alreadyHaveAnAccount() : Messages.createAnAccount()}
@@ -211,7 +210,6 @@ export const LoginForm = ({ onSuccess, disableAutoFocus, defaultEmail }: LoginFo
               size="small"
               css={css`
                 text-transform: initial;
-                font-size: 12px;
               `}
             >
               {Messages.forgotPassword()}
@@ -288,7 +286,6 @@ const ForgotPasswordForm = ({ className, onClose }: { className?: string; onClos
               size="small"
               css={css`
                 text-transform: initial;
-                font-size: 12px;
               `}
             >
               {Messages.goBack()}

@@ -45,9 +45,9 @@ export const ReplayFileContainer = React.memo(function ReplayFileContainer({
   fullPath,
   selectedFilesSet,
 }: ReplayFileContainerProps) {
-  const stageInfo = game.stageId != null ? stageUtils.getStageInfo(game.stageId) : null;
-  const stageImageUrl = stageInfo !== null && stageInfo.id !== -1 ? getStageImage(stageInfo.id) : undefined;
-  const stageName = stageInfo !== null ? stageInfo.name : Messages.unknownStage();
+  const stageInfo = game.stageId != null ? stageUtils.getStageInfo(game.stageId) : undefined;
+  const stageImageUrl = stageInfo != null && stageInfo.id !== -1 ? getStageImage(stageInfo.id) : undefined;
+  const stageName = stageInfo != null ? stageInfo.name : Messages.unknownStage();
 
   // Use Set for O(1) lookup instead of O(n) indexOf
   const selected = selectedFilesSet.has(fullPath);
@@ -133,10 +133,10 @@ export const ReplayFileContainer = React.memo(function ReplayFileContainer({
         const backupName = player.type === 1 ? "CPU" : `Player ${player.playerIndex + 1}`;
         const teamId = game.isTeams ? player.teamId : undefined;
         return {
-          characterId: player.characterId ?? undefined,
-          characterColor: player.characterColor ?? undefined,
+          characterId: player.characterId,
+          characterColor: player.characterColor,
           port: player.port,
-          teamId: teamId ?? undefined,
+          teamId,
           variant: player.connectCode ? "code" : "tag",
           text: player.connectCode || player.tag || backupName,
           isWinner: player.isWinner,
@@ -173,15 +173,15 @@ const generateReplayDetails = ({
   stageName,
   gameMode,
   lastFrame,
-  timerType = null,
-  startingTimerSeconds = null,
+  timerType,
+  startingTimerSeconds,
 }: {
   date: Date;
   stageName: string;
-  gameMode: number | null;
-  lastFrame: number | null;
-  timerType: number | null;
-  startingTimerSeconds?: number | null;
+  gameMode?: number;
+  lastFrame?: number;
+  timerType?: number;
+  startingTimerSeconds?: number;
 }): ReplayDetail[] => {
   const replayDetails: ReplayDetail[] = [
     {
@@ -207,7 +207,7 @@ const generateReplayDetails = ({
   return replayDetails;
 };
 
-const getReplayStageIcon = (gameMode: number | null): React.ComponentType => {
+const getReplayStageIcon = (gameMode: number | undefined): React.ComponentType => {
   switch (gameMode) {
     case GameMode.HOME_RUN_CONTEST:
       return SportsCricket;

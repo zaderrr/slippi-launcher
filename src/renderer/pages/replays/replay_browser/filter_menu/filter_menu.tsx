@@ -39,16 +39,17 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
   const [selectedFilterOptions, setSelectedFilterOptions] = useState<string>();
   const clearStoreFilters = useReplayFilter((store) => store.resetFilter);
   const setStagePlayed = useReplayFilter((store) => store.setStagePlayed);
-  const stageFilter = useReplayFilter((store) => store.stagePlayed);
+  const stageFilter = useReplayFilter((store) => store.stageIds);
   const charactersFilter = useReplayFilter((store) => store.characters);
   const setCharacters = useReplayFilter((store) => store.setCharacters);
   const anchorRef = useRef<HTMLDivElement>(null);
 
   const handleStageSelected = (Stage: { id: number; name: string }) => {
-    if (stageFilter == Stage.id) {
-      setStagePlayed(0);
+    if (stageFilter[0] == Stage.id) {
+      setStagePlayed([]);
     } else {
-      setStagePlayed(Stage.id);
+      console.log("ID: " + Stage.id);
+      setStagePlayed([Stage.id]);
     }
     setOpen(false);
   };
@@ -57,12 +58,14 @@ export const FilterMenu = ({ showFilters }: { showFilters: boolean }) => {
     setSelectedFilterOptions(menu);
     setOpen((prevOpen) => (selectedFilterOptions === menu ? !prevOpen : true));
   };
+
   const handleClose = (event: Event) => {
     if (anchorRef.current && anchorRef.current.contains(event.target as HTMLElement)) {
       return;
     }
     setOpen(false);
   };
+
   const handleCharacterSelected = (CharacterID: number) => {
     const SelectedCharacters = [...charactersFilter];
     const index = SelectedCharacters.findIndex((x) => x == CharacterID);

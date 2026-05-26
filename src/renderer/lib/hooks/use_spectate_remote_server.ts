@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { create } from "zustand";
 import { combine } from "zustand/middleware";
 
@@ -23,18 +24,20 @@ export const useSpectateRemoteServerStateStore = create(
 );
 
 export const useSpectateRemoteServer = () => {
-  const state = useSpectateRemoteServerStateStore((store) => ({
-    connected: store.connected,
-    started: store.started,
-    port: store.port,
-  }));
   const { authService, spectateRemoteService } = useServices();
-  const startSpectateRemoteServer = async (port: number) => {
-    const authToken = await authService.getUserToken();
-    return spectateRemoteService.startSpectateRemoteServer(authToken, port);
-  };
-  const stopSpectateRemoteServer = async () => {
-    return spectateRemoteService.stopSpectateRemoteServer();
-  };
-  return [state, startSpectateRemoteServer, stopSpectateRemoteServer] as const;
+  const connected = useSpectateRemoteServerStateStore((store) => store.connected);
+  const started = useSpectateRemoteServerStateStore((store) => store.started);
+  const port = useSpectateRemoteServerStateStore((store) => store.port);
+
+  return useMemo(() => {
+    const state = { connected, started, port };
+    const startSpectateRemoteServer = async (port: number) => {
+      const authToken = await authService.getUserToken();
+      return spectateRemoteService.startSpectateRemoteServer(authToken, port);
+    };
+    const stopSpectateRemoteServer = async () => {
+      return spectateRemoteService.stopSpectateRemoteServer();
+    };
+    return [state, startSpectateRemoteServer, stopSpectateRemoteServer] as const;
+  }, [authService, connected, port, spectateRemoteService, started]);
 };

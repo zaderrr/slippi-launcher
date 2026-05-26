@@ -7,6 +7,7 @@ import React from "react";
 import { ConfirmationModal } from "@/components/confirmation_modal/confirmation_modal";
 import { useDolphinStore } from "@/lib/dolphin/use_dolphin_store";
 import { useAccount } from "@/lib/hooks/use_account";
+import { useAppStore } from "@/lib/hooks/use_app_store";
 import { useToasts } from "@/lib/hooks/use_toasts";
 import { useServices } from "@/services";
 import type { AuthUser } from "@/services/auth/types";
@@ -17,6 +18,7 @@ import { ActivateOnlineDialog } from "../activate_online_dialog";
 import { NameChangeDialog } from "../name_change_dialog";
 import { UserInfo } from "../user_info/user_info";
 import { UserMenuMessages as Messages } from "./user_menu.messages";
+import styles from "./user_menu.module.css";
 import { UserMenuItems } from "./user_menu_items";
 
 const MAX_ACCOUNTS = 5;
@@ -39,7 +41,8 @@ export const UserMenu = ({ user, handleError }: { user: AuthUser; handleError: (
   const [openActivationDialog, setOpenActivationDialog] = React.useState(false);
   const [openAddAccountDialog, setOpenAddAccountDialog] = React.useState(false);
   const [switching, setSwitching] = React.useState(false);
-  const [reAuthEmail, setReAuthEmail] = React.useState<string | null>(null);
+  const [reAuthEmail, setReAuthEmail] = React.useState<string | undefined>();
+  const isOnline = useAppStore((state) => state.isOnline);
 
   const onLogout = async () => {
     try {
@@ -52,12 +55,12 @@ export const UserMenu = ({ user, handleError }: { user: AuthUser; handleError: (
     }
   };
 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | undefined>();
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
   const closeMenu = () => {
-    setAnchorEl(null);
+    setAnchorEl(undefined);
   };
   const handleClose = () => {
     setOpenNameChangePrompt(false);
@@ -66,14 +69,6 @@ export const UserMenu = ({ user, handleError }: { user: AuthUser; handleError: (
 
   // Get multi-account service
   const multiAccountService = authService.getMultiAccountService();
-
-  // Update accounts in state when they change
-  React.useEffect(() => {
-    const accountsList = multiAccountService.getAccounts();
-    const activeId = multiAccountService.getActiveAccountId();
-    setAccounts(accountsList);
-    setActiveAccountId(activeId);
-  }, [multiAccountService, setAccounts, setActiveAccountId]);
 
   // Handle account switch
   const handleSwitchAccount = async (accountId: string) => {
@@ -160,7 +155,9 @@ export const UserMenu = ({ user, handleError }: { user: AuthUser; handleError: (
   }, [accounts, activeAccountId]);
 
   let errMessage: string | undefined = undefined;
-  if (serverError) {
+  if (!isOnline) {
+    errMessage = Messages.offline();
+  } else if (serverError) {
     errMessage = Messages.slippiServerError();
   } else if (!userData?.playKey) {
     errMessage = Messages.onlineActivationRequired();
@@ -168,7 +165,7 @@ export const UserMenu = ({ user, handleError }: { user: AuthUser; handleError: (
 
   return (
     <div>
-      <ButtonBase onClick={handleClick}>
+      <ButtonBase onClick={handleClick} className={styles.userInfoButton}>
         <UserInfo
           displayName={displayName}
           displayPicture={user.displayPicture}
@@ -181,7 +178,6 @@ export const UserMenu = ({ user, handleError }: { user: AuthUser; handleError: (
       <Menu
         anchorEl={anchorEl}
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        transformOrigin={{ vertical: -8, horizontal: "left" }}
         keepMounted={true}
         open={Boolean(anchorEl)}
         onClose={closeMenu}
@@ -243,7 +239,7 @@ export const UserMenu = ({ user, handleError }: { user: AuthUser; handleError: (
         open={openAddAccountDialog}
         onClose={() => {
           setOpenAddAccountDialog(false);
-          setReAuthEmail(null);
+          setReAuthEmail(undefined);
         }}
         onSuccess={() => {
           if (multiAccountService) {
@@ -252,7 +248,7 @@ export const UserMenu = ({ user, handleError }: { user: AuthUser; handleError: (
             setAccounts(accountsList);
             setActiveAccountId(activeId);
           }
-          setReAuthEmail(null);
+          setReAuthEmail(undefined);
         }}
         defaultEmail={reAuthEmail}
       />

@@ -24,7 +24,6 @@ import { useServices } from "@/services";
 import { AddConnectionDialog } from "./add_connection_dialog/add_connection_dialog";
 import { ConsoleMirrorMessages as Messages } from "./console_mirror.messages";
 import { NewConnectionList } from "./new_connection_list/new_connection_list";
-import { OBSWebsocketNotice } from "./obs_websocket_notice";
 import { SavedConnectionsList } from "./saved_connections_list/saved_connections_list";
 
 const Outer = styled.div`
@@ -39,7 +38,7 @@ export const ConsoleMirror = React.memo(() => {
   const { consoleService } = useServices();
   const [isScanning, setIsScanning] = React.useState(false);
   const [modalOpen, setModalOpen] = React.useState(false);
-  const [currentFormValues, setCurrentFormValues] = React.useState<Partial<StoredConnection> | null>(null);
+  const [currentFormValues, setCurrentFormValues] = React.useState<Partial<StoredConnection> | undefined>();
   const savedConnections = useSettings((store) => store.connections);
   const savedIps = savedConnections.map((conn) => conn.ipAddress);
   const availableConsoles = useConsoleDiscoveryStore((store) => store.consoleItems);
@@ -50,8 +49,8 @@ export const ConsoleMirror = React.memo(() => {
       if (!ipAddress) {
         return false;
       }
-      const status = connectedConsoles[ipAddress]?.status ?? null;
-      return status !== null && status !== ConnectionStatus.DISCONNECTED;
+      const status = connectedConsoles[ipAddress]?.status;
+      return status != null && status !== ConnectionStatus.DISCONNECTED;
     },
     [connectedConsoles],
   );
@@ -74,7 +73,7 @@ export const ConsoleMirror = React.memo(() => {
 
   const onCancel = () => {
     setModalOpen(false);
-    setCurrentFormValues(null);
+    setCurrentFormValues(undefined);
   };
 
   const onSubmit = async (data: EditConnectionType) => {
@@ -160,7 +159,6 @@ export const ConsoleMirror = React.memo(() => {
         onCancel={onCancel}
         disabled={consoleIsConnected(currentFormValues?.ipAddress)}
       />
-      <OBSWebsocketNotice />
     </Outer>
   );
 });

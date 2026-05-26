@@ -49,6 +49,7 @@ log.transports.file.level = isDevelopment ? "info" : "warn";
 // In dev mode, both main and renderer import electron-log, which causes duplication
 if (isDevelopment) {
   log.transports.ipc.level = false;
+  app.commandLine.appendSwitch("remote-debugging-port", "9222");
 }
 
 // Only allow a single Slippi App instance
@@ -58,7 +59,7 @@ if (!lockObtained) {
 }
 
 const flags = getConfigFlags();
-const { dolphinManager, settingsManager } = installModules(flags);
+const { dolphinManager, settingsManager, browserWindowManager } = installModules(flags);
 
 class AppUpdater {
   constructor() {
@@ -108,7 +109,7 @@ const createWindow = async () => {
   mainWindow = new BrowserWindow({
     show: false,
     width: 1100,
-    height: 728,
+    height: 750,
     minHeight: isDevelopment ? undefined : 450,
     minWidth: isDevelopment ? undefined : 900,
     backgroundColor: BACKGROUND_COLOR,
@@ -149,6 +150,7 @@ const createWindow = async () => {
 
   const menuBuilder = new MenuBuilder({
     mainWindow,
+    browserWindowManager,
     onOpenPreferences: () => {
       void openPreferences().catch(log.error);
     },
@@ -238,6 +240,10 @@ const handleSlippiURIAsync = async (aUrl: string) => {
     await createWindow();
   }
 
+  // Parse optional startFrame from query params
+  const startFrameParam = myUrl.searchParams.get("startFrame");
+  const startFrame = startFrameParam != null ? parseInt(startFrameParam, 10) : undefined;
+
   switch (protocol) {
     case "slippi:": {
       let replayPath = myUrl.searchParams.get("path");
@@ -265,12 +271,12 @@ const handleSlippiURIAsync = async (aUrl: string) => {
       } else {
         log.info(`${destination} already exists. Skipping download...`);
       }
-      await playReplayAndShowStats(destination);
+      await playReplayAndShowStats(destination, startFrame);
       break;
     }
     case "file:": {
       log.info(myUrl.pathname);
-      await playReplayAndShowStats(aUrl);
+      await playReplayAndShowStats(aUrl, startFrame);
       break;
     }
     default: {
@@ -313,7 +319,7 @@ app.on("second-instance", (_, argv) => {
   handleSlippiURI(lastItem);
 });
 
-const playReplayAndShowStats = async (filePath: string) => {
+const playReplayAndShowStats = async (filePath: string, startFrame?: number) => {
   // Ensure playback dolphin is actually installed
   await dolphinManager.installDolphin(DolphinLaunchType.PLAYBACK);
 
@@ -321,6 +327,7 @@ const playReplayAndShowStats = async (filePath: string) => {
   await dolphinManager.launchPlaybackDolphin("playback", {
     mode: "normal",
     replay: filePath,
+    startFrame,
   });
 
   // Show the stats page

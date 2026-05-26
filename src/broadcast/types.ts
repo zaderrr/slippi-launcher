@@ -69,11 +69,11 @@ export type SlippiBroadcastPayloadEvent =
 export type BroadcastService = {
   onSpectateReconnect(handle: () => void): () => void;
   onBroadcastReconnect(handle: (config: StartBroadcastConfig) => void): () => void;
-  onBroadcastErrorMessage(handle: (message: string | null) => void): () => void;
+  onBroadcastErrorMessage(handle: (message?: string) => void): () => void;
   onBroadcastListUpdated(handle: (items: BroadcasterItem[]) => void): () => void;
   onDolphinStatusChanged(handle: (status: number) => void): () => void;
   onSlippiStatusChanged(handle: (status: number) => void): () => void;
-  onSpectateErrorMessage(handle: (message: string | null) => void): () => void;
+  onSpectateErrorMessage(handle: (message?: string) => void): () => void;
   connectToSpectateServer(authToken: string): Promise<void>;
   disconnectFromSpectateServer(): Promise<void>;
   refreshBroadcastList(): Promise<void>;
@@ -93,7 +93,7 @@ export interface SpectateController {
   dolphinClosed(playbackId: string): Promise<void>;
   connect(authToken: string): Promise<void>;
   refreshBroadcastList(): Promise<void>;
-  getOpenBroadcasts(): Promise<{ broadcastId: string; dolphinId: string }[]>;
+  getOpenBroadcasts(): Promise<{ broadcastId: string; dolphinId: string; filePath?: string }[]>;
   getBroadcastListObservable(): Observable<BroadcasterItem[]>;
   getSpectateDetailsObservable(): Observable<{
     broadcastId: string;
@@ -101,6 +101,6 @@ export interface SpectateController {
     filePath: string;
     broadcasterName: string;
   }>;
-  getGameEndObservable(): Observable<{ broadcastId: string; dolphinId: string }>;
+  getGameEndObservable(): Observable<{ broadcastId: string; dolphinId: string; filePath: string }>;
   getErrorObservable(): Observable<Error | string>;
 }

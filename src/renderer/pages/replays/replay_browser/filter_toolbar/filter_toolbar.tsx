@@ -45,7 +45,7 @@ export const FilterToolbar = React.forwardRef<HTMLInputElement, FilterToolbarPro
   const currentFolder = useReplays((store) => store.currentFolder);
   const storeSearchText = useReplayFilter((store) => store.searchText);
   const storeCharacters = useReplayFilter((store) => store.characters);
-  const storeStagePlayed = useReplayFilter((store) => store.stagePlayed);
+  const storeStagePlayed = useReplayFilter((store) => store.stageIds);
   const setStoreSearchText = useReplayFilter((store) => store.setSearchText);
   const sortBy = useReplayFilter((store) => store.sortBy);
   const hideShortGames = useReplayFilter((store) => store.hideShortGames);
@@ -61,9 +61,19 @@ export const FilterToolbar = React.forwardRef<HTMLInputElement, FilterToolbarPro
     presenter.init(rootSlpPath, extraSlpPaths, true, currentFolder).catch(showError);
   }, [presenter, rootSlpPath, extraSlpPaths, currentFolder, showError]);
 
-  const debounceChange = debounce((text: string) => {
-    setStoreSearchText(text);
-  }, 100);
+  const debounceChange = React.useMemo(
+    () =>
+      debounce((text: string) => {
+        setStoreSearchText(text);
+      }, 300),
+    [setStoreSearchText],
+  );
+
+  React.useEffect(() => {
+    return () => {
+      debounceChange.cancel();
+    };
+  }, [debounceChange]);
 
   const setNameFilter = (name: string) => {
     setSearchText(name);

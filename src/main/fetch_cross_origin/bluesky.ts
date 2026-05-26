@@ -1,7 +1,5 @@
+import { TimeExpiryCache } from "@common/time_expiry_cache";
 import { fetch } from "cross-fetch";
-import electronLog from "electron-log";
-
-const log = electronLog.scope("main/bluesky");
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -33,6 +31,7 @@ export type BlueskyPost = {
     indexedAt: string;
     labels: string[];
   };
+  reply?: any;
   reason:
     | {
         by: BlueskyUser;
@@ -41,53 +40,40 @@ export type BlueskyPost = {
     | undefined;
 };
 
-export type BlueskyFeed = {
+type BlueskyFeed = {
   feed: BlueskyPost[] | undefined;
-  error: string | undefined;
-  message: string | undefined;
+  error?: string;
+  message?: string;
 };
 
 // Let's cache our Bluesky responses to prevent hitting the API too much
-type ResponseCacheEntry = {
-  time: number;
-  response: any;
-};
+const cache = new TimeExpiryCache<string, BlueskyFeed>(EXPIRES_IN);
 
-const blueskyResponseCache: Record<string, ResponseCacheEntry> = {};
-
-export async function getBlueskyFeed(): Promise<BlueskyFeed> {
+export async function getBlueskyFeed(actorId: string): Promise<BlueskyPost[]> {
   const url = new URL("https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed");
-  url.searchParams.append("actor", "did:plc:6xwud4csg7p7243ptrc5sa5y");
+  url.searchParams.append("actor", actorId);
 
   const data = await cachedFetch(url.toString());
 
-  return data;
-}
-
-async function cachedFetch(url: string): Promise<any> {
-  log.debug(`Checking cache for: ${url}`);
-  const cachedResponse = blueskyResponseCache[url];
-  if (cachedResponse) {
-    // Check if the cache has expired
-    const elapsedMs = Date.now() - cachedResponse.time;
-    if (elapsedMs <= EXPIRES_IN) {
-      log.debug(`Cache hit. Returning cached response.`);
-      return cachedResponse.response;
-    } else {
-      log.debug(`Cache expired. Refetching data...`);
-    }
+  if (data.error || data.feed == null) {
+    throw new Error(`Error fetching Bluesky feed: ${data.message}`);
   }
 
-  log.debug(`Fetching: ${url}`);
-  // Fetch the data
-  const res = await fetch(url);
-  const data = await res.json();
+  return (
+    // any api response with the reply field is not a top level post and we don't want to show those in the launcher
+    data.feed.filter((entry) => !entry.reply)
+  );
+}
 
-  // Cache the data
-  blueskyResponseCache[url] = {
-    response: data,
-    time: Date.now(),
-  };
+async function cachedFetch(url: string): Promise<BlueskyFeed> {
+  let response: BlueskyFeed | undefined = cache.get(url);
+  if (!response) {
+    // Fetch the data
+    const res = await fetch(url);
+    response = (await res.json()) as BlueskyFeed;
 
-  return data;
+    cache.set(url, response);
+  }
+
+  return response;
 }

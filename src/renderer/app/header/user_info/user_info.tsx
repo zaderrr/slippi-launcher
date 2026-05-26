@@ -1,9 +1,10 @@
 import { css } from "@emotion/react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CircularProgress from "@mui/material/CircularProgress";
 import React from "react";
 
 import { UserIcon } from "@/components/user_icon";
-import { colors } from "@/styles/colors";
+import { cssVar } from "@/styles/css_variables";
 
 export const UserInfo = React.memo(function UserInfo({
   displayName,
@@ -26,13 +27,10 @@ export const UserInfo = React.memo(function UserInfo({
         display: flex;
         align-items: center;
         color: white;
-
-        @media (min-width: 800px) {
-          min-width: 250px;
-        }
+        padding: 8px 10px;
       `}
     >
-      {loading ? <CircularProgress color="inherit" /> : <UserIcon imageUrl={displayPicture} size={38} />}
+      {loading ? <CircularProgress color="inherit" /> : <UserIcon imageUrl={displayPicture} size={42} />}
       <div
         css={css`
           display: flex;
@@ -57,12 +55,20 @@ export const UserInfo = React.memo(function UserInfo({
             css={css`
               font-weight: bold;
               font-size: 14px;
-              color: ${errorMessage ? "red" : colors.purpleLight};
+              color: ${errorMessage ? "red" : cssVar("purpleLight")};
             `}
           >
             {subtext}
           </div>
         )}
+      </div>
+      <div
+        css={css`
+          color: var(--purple-lighter);
+          margin-left: 16px;
+        `}
+      >
+        <ExpandMoreIcon />
       </div>
     </div>
   );

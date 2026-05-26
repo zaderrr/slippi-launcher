@@ -14,13 +14,14 @@ import { BasicFooter } from "@/components/footer/footer";
 import { LabelledText } from "@/components/labelled_text";
 import { IconMessage } from "@/components/message";
 import { useDolphinActions } from "@/lib/dolphin/use_dolphin_actions";
+import { useAccount } from "@/lib/hooks/use_account";
 import { useDelayedLoading } from "@/lib/hooks/use_delayed_loading";
 import { useReplayBrowserList, useReplayBrowserNavigation } from "@/lib/hooks/use_replay_browser_list";
 import { buildReplayFilters, useReplayFilter } from "@/lib/hooks/use_replay_filter";
 import { useReplayPresenter, useReplays, useReplaySelection } from "@/lib/hooks/use_replays";
 import { useToasts } from "@/lib/hooks/use_toasts";
 import { useServices } from "@/services";
-import { colors } from "@/styles/colors";
+import { cssVar } from "@/styles/css_variables";
 
 import { FileList } from "./file_list/file_list";
 import { FileListSkeleton } from "./file_list/file_list_skeleton";
@@ -51,6 +52,7 @@ export const ReplayBrowser = React.memo(() => {
     }
   }, [replayProgress]);
 
+  const user = useAccount((store) => store.user);
   const currentFolder = useReplays((store) => store.currentFolder);
   const folderTree = useReplays((store) => store.folderTree);
   const collapsedFolders = useReplays((store) => store.collapsedFolders);
@@ -71,8 +73,8 @@ export const ReplayBrowser = React.memo(() => {
   const { files: filteredFiles } = useReplayBrowserList();
   const { goToReplayStatsPage } = useReplayBrowserNavigation();
 
-  const setSelectedItem = (index: number | null) => {
-    if (index === null) {
+  const setSelectedItem = (index: number | undefined) => {
+    if (index == null) {
       void presenter.clearSelectedFile();
     } else {
       const file = filteredFiles[index];
@@ -115,8 +117,8 @@ export const ReplayBrowser = React.memo(() => {
     try {
       if (selectAllMode) {
         // Get all file paths from the current folder with the same filters
-        const { sortBy, sortDirection, hideShortGames, searchText, stagePlayed } = useReplayFilter.getState();
-        const filters = buildReplayFilters(hideShortGames, searchText, stagePlayed);
+        const { sortBy, sortDirection, hideShortGames, searchText, stageIds, characters } = useReplayFilter.getState();
+        const filters = buildReplayFilters(hideShortGames, searchText, user?.uid, stageIds, characters);
         const allFilePaths = await replayService.getAllFilePaths({
           folderPath: currentFolder,
           orderBy: {
@@ -144,7 +146,7 @@ export const ReplayBrowser = React.memo(() => {
     } catch (err) {
       showError(err);
     }
-  }, [selectAllMode, selectedFiles, deselectedFiles, currentFolder, replayService, viewReplays, showError]);
+  }, [selectAllMode, selectedFiles, deselectedFiles, currentFolder, replayService, viewReplays, showError, user]);
 
   const handleDeleteAll = React.useCallback(async () => {
     try {
@@ -152,8 +154,8 @@ export const ReplayBrowser = React.memo(() => {
 
       if (selectAllMode) {
         // Use bulk delete with filters
-        const { hideShortGames, searchText, stagePlayed } = useReplayFilter.getState();
-        const filters = buildReplayFilters(hideShortGames, searchText, stagePlayed);
+        const { hideShortGames, searchText, stageIds, characters } = useReplayFilter.getState();
+        const filters = buildReplayFilters(hideShortGames, searchText, user?.uid, stageIds, characters);
         const result = await replayService.bulkDeleteReplays({
           folderPath: currentFolder,
           filters,
@@ -183,6 +185,7 @@ export const ReplayBrowser = React.memo(() => {
     showSuccess,
     filteredFiles,
     presenter,
+    user,
   ]);
 
   return (
@@ -287,7 +290,7 @@ export const ReplayBrowser = React.memo(() => {
               <IconButton onClick={() => window.electron.shell.openPath(currentFolder)} size="small">
                 <FolderIcon
                   css={css`
-                    color: ${colors.purpleLight};
+                    color: ${cssVar("purpleLight")};
                   `}
                 />
               </IconButton>
